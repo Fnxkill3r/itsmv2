@@ -1,0 +1,285 @@
+[
+    {
+        "alert": "postgres_uptime",
+        "environment": "All",
+        "type": "psqlUptime",
+        "description": "Check if postgres uptime restarted",
+        "query" : "SELECT pg_postmaster_start_time();",
+        "group" : "psql",
+        "message":
+        {
+            "OK": "Psql uptime is greater than last check. Uptime varValue",
+            "NOK": "Psql has been restarted since last check. Uptime varValue"
+        },
+        "severity": "WARNING",
+        "active": true
+    },
+    {
+        "alert": "postgresql_auto_conf",
+	    "file_not_exist": "postgresql.auto.conf",
+        "environment": "All",
+        "type": "checkParameters",
+        "description": "Check if parameters are configured by alter system command",
+        "group" : "psql",
+        "message": {
+            "OK": "No parameters are configured by alter system command",
+            "NOK": "Some parameters are configured by alter system command, please check postgresql.auto.conf"
+        },
+	    "severity": "WARNING",
+        "active": true
+    },
+    {
+        "alert": "has_certificate",
+	    "file_exist": "filename",
+        "environment": "All",
+        "type": "checkCertificate",
+        "description": "Check if there is a certificate file",
+        "group" : "ssl",
+        "message": {
+            "OK": "The certificate file is set.",
+            "NOK": "There is no certificate file on the specified path."
+        },
+	    "severity": "WARNING",
+        "active": true
+    },
+    {
+	    "alert": "certificate_expiration_time",
+	    "environment": "all",
+	    "type": "certificateExpirationTime",
+	    "description": "Check the SSL certificate expiration time",
+	    "group" : "ssl",
+	    "message": "There are varValue varValue left until certificate expiration",
+	    "thresholds":
+        {
+	        "WARNING": 60,
+	        "MINOR": 30,
+	        "MAJOR": 15,
+	        "CRITICAL": 7
+	    },
+	    "threshold_type": "Days",
+        "allowed_types": ["Days"],
+	    "active": false
+    },
+    {
+        "alert": "default_tablespace",
+        "environment": "All",
+        "type": "currentSetting",
+        "description": "Check if the default_tablespace parameter is configure as <default_ts>",
+        "query":  "select setting from pg_catalog.pg_settings where name='default_tablespace'",
+	    "expected": "default_ts1",
+        "group" : "psql",
+        "message": {
+            "OK": "Default tablespace is varValue",
+            "NOK": "Default tablespace is varValue"
+        },
+	    "severity": "WARNING",
+        "active": true
+    },
+    {
+        "alert": "default_temp_tablespace",
+        "environment": "All",
+        "type": "checkParameters",
+        "description": "Check if the temp_tablespaces parameter is configure with <temp_ts*>",
+        "query": "select setting from pg_catalog.pg_settings where name='temp_tablespaces'",
+        "expected": "temp_ts1",
+        "group" : "psql",
+        "message": {
+            "OK": "Default temp_tablespace is varValue.",
+            "NOK": "Default temp_tablespace is varValue."
+        },
+        "severity": "WARNING",
+        "active": true
+    },
+    {
+        "alert": "hba_config_error",
+        "environment": "All",
+        "type": "hbaConfigError",
+        "description": "Check if there are erros on pg_hba.conf file",
+        "query": "select count(1) from pg_catalog.pg_hba_file_rules where error is not null",
+        "expected": "0",
+        "group" : "psql",
+        "message": {
+            "OK": "varValue error(s) on pg_hba.conf file.",
+            "NOK": "The file pg_hba.conf has varValue errors."
+        },
+        "severity": "WARNING",
+        "active": true
+    },
+    {
+        "alert": "parameter_pending_restart",
+        "environment": "All",
+        "type": "parameterPendingRestart",
+        "description": "Check if there are parameter changes that require restart",
+        "query":  "select count(1) from pg_catalog.pg_settings where pending_restart = 't'",
+	    "expected": "0",
+        "group" : "psql",
+        "message": {
+            "OK": "varValue change(s) requiring restart.",
+            "NOK": "varValue parameter change(s) requiring restart."
+        },
+        "severity": "WARNING",
+        "active": true
+    },
+    {
+        "alert": "parameter_invalid_config",
+        "environment": "All",
+        "type": "parameterInvalidConfig",
+        "description": "Check if there are errors on postgresql configuration.",
+        "query":  "select count(1) from pg_catalog.pg_file_settings where applied='f' and error is not null",
+        "expected": 0,
+        "group" : "psql",
+        "message": {
+            "OK": "varValue configuration error(s) detected.",
+            "NOK": "varValue error(s) on postgres configuration."
+        },
+        "severity": "WARNING",
+        "active": true
+    },
+    {
+        "alert": "archive_failed_10min",
+        "environment": "All",
+        "type": "isArchiveFailed",
+        "description": "Check if there was archive fails in the lats 10 min.",
+        "query":  "select count(1) from  pg_catalog.pg_stat_archiver where last_failed_time >= current_timestamp  -  interval '10 minutes'",
+        "expected": 0,
+        "group" : "psql",
+        "message": {
+            "OK": "varValue archives failed in last 10 min.",
+            "NOK": "There were archive fails. Total varValue."
+        },
+        "severity": "WARNING",
+        "active": true
+    },
+    {
+	    "alert": "data_cache_ratio",
+	    "environment": "all",
+	    "type": "dataCachePct",
+	    "description": "Check the percentage of data cache ratio",
+        "query":  "select round(100 * sum(blks_hit) / sum(blks_hit + blks_read), 0) from pg_catalog.pg_stat_database where datname = 'database_name'",
+        "group": "per_database",
+	    "message": "The datacache ratio is varValue varValue ",
+	    "thresholds":
+        {
+	        "WARNING": 60,
+	        "MINOR": 30,
+	        "MAJOR": 15,
+	        "CRITICAL": 7
+	    },
+	    "threshold_type": "%",
+        "allowed_types": ["%"],
+	    "active": true
+    },
+      {
+	    "alert": "fetch_ratio",
+	    "environment": "all",
+	    "type": "fetchRatio",
+	    "description": "Check the percentage of fetch ratio",
+        "query":  "select round(100 * tup_returned / (tup_returned + tup_fetched), 0) from pg_catalog.pg_stat_database where datname = 'database_name'",
+        "group": "per_database",
+	    "message": "Database: database_name. The fetch ratio is varValue varValue",
+	    "thresholds":
+        {
+	        "WARNING": 60,
+	        "MINOR": 30,
+	        "MAJOR": 15,
+	        "CRITICAL": 7
+	    },
+	    "threshold_type": "%",
+        "allowed_types": ["%"],
+	    "active": true
+    },
+      {
+	    "alert": "commit_ratio",
+	    "environment": "all",
+	    "type": "commitRatio",
+	    "description": "Check the percentage of commit ratio",
+        "query":  "select round(100 * xact_commit / (xact_commit + xact_rollback), 0) from pg_catalog.pg_stat_database where datname = 'database_name'",
+        "group": "per_database",
+	    "message": "Database: database_name. The commit ratio is varValue varValue ",
+	    "thresholds":
+        {
+	        "WARNING": 60,
+	        "MINOR": 30,
+	        "MAJOR": 15,
+	        "CRITICAL": 7
+	    },
+	    "threshold_type": "%",
+        "allowed_types": ["%"],
+	    "active": true
+    },
+    {
+        "alert": "check_wrong_data_tablespace",
+        "environment": "All",
+        "type": "checkWrongDataTablespace",
+        "description": "Check if exists any table in default tablespaces",
+        "query":  "select count(*) from pg_catalog.pg_tables where schemaname not in ('pg_catalog','information_schema') and tablespace is not null",
+	    "expected": 0,
+        "group" : "per_table",
+        "message": {
+            "OK": "Database: database_name. varValue tables on default tablespaces",
+            "NOK": "Database: database_name. varValue tables on default tablespaces"
+        },
+        "severity": "WARNING",
+        "active": true
+    },
+    {
+        "alert": "check_wrong_index_tablespace",
+        "environment": "All",
+        "type": "checkWrongIndexTablespace",
+        "description": "Check if exists any index in default tablespaces",
+        "query":  "select count(*) from pg_catalog.pg_indexes where schemaname not in ('pg_catalog','information_schema') and tablespace not like '%database_name_index_ts%'",
+	    "expected": 0,
+        "group" : "per_table",
+        "message": {
+            "OK": "Database: database_name. varValue indexes on default tablespaces",
+            "NOK": "Database: database_name. varValue indexes on default tablespaces"
+        },
+        "severity": "WARNING",
+        "active": true
+    },
+    {
+        "alert": "without_analyze_7days",
+        "environment": "All",
+        "type": "withoutAnalyze7Days",
+        "description": "Check if exists any table without analyze in the lats days",
+        "query":  "select count(*)from pg_stat_all_tables where schemaname not in ('pg_toast') and relname not in ('pg_statistic') and last_analyze  <= current_timestamp - interval '7 days'",
+	    "expected": 0,
+        "group" : "per_table",
+        "message": {
+            "OK": "Database: database_name. varValue tables without analyse for the last 7 days.",
+            "NOK": "Database: database_name. Tables without analyse for the last 7 days: varValue "
+        },
+        "severity": "WARNING",
+        "active": true
+    },
+      {
+        "alert": "dead_size_50",
+        "environment": "All",
+        "type": "deadSize50",
+        "description": "Check if exists any table with more than 50% of useless size.",
+        "query":  "select count(*) from pg_stat_all_tables  where n_dead_tup > 0 and n_live_tup > 0 and schemaname not in ('pg_toast') and relname not in ('pg_statistic') and round((round(((pg_total_relation_size(relid) * round(((n_dead_tup * 100)/(n_live_tup + n_dead_tup))::numeric,2)) / 100)::numeric,2)/1024)::numeric,2) > 50",
+	    "expected": 0,
+        "group" : "per_table",
+        "message": {
+            "OK": "Database: database_name. varValue tables with more than 50% of useless size.",
+            "NOK": "Database: database_name. Tables with more than 50% of useless size: varValue "
+        },
+        "severity": "WARNING",
+        "active": true
+    },
+    {
+        "alert": "tuples_changed_50",
+        "environment": "All",
+        "type": "tuplesChanged50",
+        "description": "Check if any table changed more than 50% since last analyze.",
+        "query": "select count(*) from pg_stat_all_tables where n_dead_tup > 0 and n_live_tup > 0 and round(((n_mod_since_analyze * 100) /  (n_live_tup + n_dead_tup))::numeric,2)  > 50 and schemaname not in ('pg_toast') and relname not in ('pg_statistic')",
+	    "expected": 0,
+        "group" : "per_table",
+        "message": {
+            "OK": "Database: database_name. varValue tables with more than 50% change since last analyze.",
+            "NOK": "Database: database_name. Tables with more than 50% change since last analyze: varValue "
+        },
+        "severity": "WARNING",
+        "active": true
+    }
+]
