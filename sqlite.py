@@ -42,8 +42,7 @@ class Sqlite:
         with open(fname, 'a') as file:
             file.write(",".join([str(j) for i in data for j in i]))
 
-    def write(self, table, columns, data):
-        query = "INSERT INTO {0} ({1}) VALUES ({2});".format(table, columns, data)
+    def write(self, query):
         self.cursor.execute(query)
         self.conn.commit()
 

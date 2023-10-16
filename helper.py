@@ -1,5 +1,6 @@
 import os
 import json
+import re
 
 
 def file_exists(file):
@@ -52,3 +53,27 @@ def ordered_dic(dic):
     my_keys.sort()
     sorted_dict = {i: dic[i] for i in my_keys}
     return sorted_dict
+
+
+def find_position(string, pattern):
+    positions = [patt.start() for patt in re.finditer(pattern, string)]
+    return positions
+
+
+def find_and_replace(string, pattern, new_val):
+    # new_val must be array
+    pos = find_position(string, pattern)
+    pos_count = len(pos)
+    if pos_count != len(new_val):
+        return "Number of fields do not match"
+    for count in range(0, pos_count):
+        str_pos = string.lower().find(pattern.lower())
+        string = string[0: str_pos] + str(new_val[count]) + string[(str_pos + len(pattern)):len(string)]
+    return string
+
+
+def find_and_replace_multi(string, patterns, vals):
+    # patterns and new_val must be array
+    for val in range(0, len(patterns)):
+        string = string.replace(patterns[val], str(vals[val]), 1)
+    return string

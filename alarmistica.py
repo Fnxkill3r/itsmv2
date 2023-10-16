@@ -1,6 +1,23 @@
 from helper import *
 from os_alert import Os_Alert
-import sqlite
+from psql_alerts import Psql_Alert
+from sqlite import Sqlite
+import psutil
+import os
+
+sqlite_db = "itsm.db"
+
+
+def first_run():
+    if not file_exists(sqlite_db):
+        hostname = os.name
+        boot_time = int(psutil.boot_time())
+        host_db = Sqlite(sqlite_db)
+        host_db.run_query("CREATE TABLE host ( 'name'	TEXT,  'uptime' INTEGER);")
+        query = "INSERT INTO host (name, uptime) VALUES ('{}','{}')".format(hostname, boot_time)
+        host_db.write(query)
+
+
 
 
 def set_filesystem_config(dic_array):
@@ -21,12 +38,27 @@ def set_filesystem_config(dic_array):
     return filesystems
 
 
+first_run()
+
 os_config_dic_array = json_to_dic("os_alerts.json")
-#psql_config_dic_array = json_to_dic("psql_alerts.json")
-#filesystem_config_dic_array = set_filesystem_config(json_to_dic("filesystem_alerts.json"))
-#send only active and env_type = cenas
-#print(psql_config_dic_array[0])
+psql_config_dic_array = json_to_dic("psql_alerts.json")
+# filesystem_config_dic_array = set_filesystem_config(json_to_dic("filesystem_alerts.json"))
+# send only active and env_type = cenas
+# print(psql_config_dic_array[0])
 
 current_os_alerts = []
 for cnf in os_config_dic_array:
-    print(Os_Alert(cnf, "itsm.db").run())
+    current_os_alerts.append(Os_Alert(cnf, "itsm.db"))
+
+for alert in current_os_alerts:
+    print(alert)
+
+
+current_psql_alerts = []
+for cnf in psql_config_dic_array:
+    current_psql_alerts.append(Psql_Alert(cnf, "itsm.db"))
+
+for alert in current_psql_alerts:
+
+    print(alert.name)
+    alert.run()

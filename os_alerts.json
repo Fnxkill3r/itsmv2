@@ -7,8 +7,8 @@
         "group" : "os",
         "message":
         {
-          "OK": "System uptime is greater than last check. Up since varValue",
-          "NOK": "System has been restarted since last check. Up since varValue"
+          "OK": "System uptime is greater than last check. Up since var_value",
+          "NOK": "System has been restarted since last check. Up since var_value"
         },
         "severity": "WARNING",
         "active": true
@@ -21,8 +21,8 @@
         "group" : "os",
         "message":
         {
-          "OK": "CPU average load in last 5 min is varValue.",
-          "NOK": "CPU average load in last 5 min is 1. Possible problem."
+          "OK": "CPU average load in last 5 min is var_value.",
+          "NOK": "CPU average load in last 5 min is var_value. Possible problem."
         },
         "severity": "WARNING",
         "active": true
@@ -33,7 +33,7 @@
         "type": "systemMemoryUsage",
         "description": "The memory usage by system",
         "group" : "os",
-        "message": "The system as varValue varValue free memory",
+        "message": "The system as var_threshold_value var_threshold_type free memory",
         "thresholds":
         {
             "WARNING": 4,
