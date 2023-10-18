@@ -24,18 +24,22 @@ class Alert:
         self.config = config
         self.name = config["alert"]
         self.type = config["type"]
+        self.query = self.get_query()
         self.description = config["description"]
         self.category = ""
         self.severity = ""
         self.state = ""
         self.message = ""
-        self.run_timestamp = ""
+        self.run_timestamp = self.get_run_timestamp()
 
     def __str__(self):
-        return f"{self.name}({self.type}, {self.state}, {self.severity}, {self.message} )"
+        return f"{self.name}({self.type}, {self.state}, {self.severity}, {self.message} , {self.run_timestamp})"
 
     def get_category(self):
         return "threshold" if has_key(self.config, "thresholds") else "ok_nok"
+
+    def get_query(self):
+        return self.config["query"] if has_key(self.config, "query") else "not_set"
 
     def get_state(self):
         return "OK" if self.severity == "NORMAL" else "NOK"

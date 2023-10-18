@@ -1,3 +1,4 @@
+import psql_alerts
 from helper import *
 from os_alert import Os_Alert
 from psql_alerts import Psql_Alert
@@ -55,10 +56,18 @@ for alert in current_os_alerts:
 
 
 current_psql_alerts = []
+psql_databases = psql_alerts.get_databases()
+
 for cnf in psql_config_dic_array:
-    current_psql_alerts.append(Psql_Alert(cnf, "itsm.db"))
+    if cnf["group"] != "per_database" and cnf["group"] != "per_table":
+        current_psql_alerts.append(Psql_Alert(cnf, "itsm.db"))
+    else:
+        conf = cnf["type"]
+        query = cnf["query"]
+        for db in psql_databases:
+            cnf.update({"type": conf + ":" + db})
+            cnf.update({"query": query.replace("var_database_name", db, 1)})
+            current_psql_alerts.append(Psql_Alert(cnf, "itsm.db"))
 
 for alert in current_psql_alerts:
-
-    print(alert.name)
-    alert.run()
+    print(alert)
