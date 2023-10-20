@@ -11,7 +11,7 @@ class Sqlite:
 
     def open(self, name):
         try:
-            self.conn = sqlite3.connect(name);
+            self.conn = sqlite3.connect(name)
             self.cursor = self.conn.cursor()
         except sqlite3.Error as e:
             print("Error connecting to database!")

@@ -19,7 +19,8 @@
         "environment": "All",
         "type": "checkParameters",
         "description": "Check if parameters are configured by alter system command",
-        "file_not_exist": "postgresql.auto.conf",
+        "file": "postgresql.auto.conf",
+        "file_existence": false,
         "group" : "psql",
         "message": {
             "OK": "No parameters are configured by alter system command",
@@ -33,7 +34,8 @@
         "environment": "All",
         "type": "checkCertificate",
         "description": "Check if there is a certificate file",
-        "file_exist": "filename",
+        "file": "filename",
+        "file_existence": true,
         "group" : "ssl",
         "message": {
             "OK": "The certificate file is set.",

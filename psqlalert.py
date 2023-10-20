@@ -12,7 +12,12 @@ def get_databases():
     return databases
 
 
-class Psql_Alert(Alert):
+def get_data_dir():
+    conn = Psql()
+    return conn.run_query("select setting from pg_catalog.pg_settings where name='data_directory'")[0][0]
+
+
+class PsqlAlert(Alert):
     def __init__(self, config, db_name):
         super().__init__(config)
         self.db_name = db_name
@@ -53,33 +58,39 @@ class Psql_Alert(Alert):
             return find_and_replace_multi(message, ["var_database_name", "var_threshold_value", "var_threshold_type"],
                                           value)
 
-#################### Specific functions ########################
+    #################### Specific functions ########################
     def postgres_uptime(self):
         psql_boot_time_full = self.conn.run_query(self.config["query"])
         psql_boot_time_epoch = int(psql_boot_time_full[0][0].strftime('%s'))
+        time = epoch_to_human(psql_boot_time_epoch)
+
         # print(psql_boot_time_epoch)
         host_db = Sqlite(self.db_name)
-        sqlite_query = "SELECT count(*) from psql"
-        total_rows = host_db.run_query(sqlite_query)[0][0]
+        tables_query = "SELECT name FROM sqlite_schema WHERE type ='table' AND name NOT LIKE 'sqlite_%';"
+        tables = host_db.run_query(tables_query)
+        total = 0
+        for table in tables:
+            if table[0] == "psql":
+                total = 1
 
-        if total_rows < 1:
+        if total < 1:
             host_db.run_query("CREATE TABLE psql ( 'port'	TEXT,  'uptime' TEXT);")
-            query = "INSERT INTO psql (port, uptime) VALUES ('{}','{}')".format("50000", psql_boot_time_epoch)
-            host_db.write(query)
+            uptime_query = "INSERT INTO psql (port, uptime) VALUES ('{}','{}')".format("50000", psql_boot_time_epoch)
+            host_db.write(uptime_query)
             self.state = "OK"
             self.severity = "NORMAL"
-            self.message = "First run: No database value yet. Uptime: " + psql_boot_time_epoch
+            self.message = "First run: No database value yet. Uptime: " + time
 
         else:
-            query = "SELECT uptime FROM psql ORDER BY id LIMIT 1"
+            query = "SELECT uptime FROM psql ORDER BY uptime LIMIT 1"
             saved_uptime = host_db.run_query(query)[0][0]
             saved_uptime = int(float(saved_uptime))
+            time = epoch_to_human(saved_uptime)
             self.state = "OK" if saved_uptime >= psql_boot_time_epoch else "NOK"
             self.severity = self.get_severity(self.state)
+            self.message = self.set_message([time])
 
-            #host_db.write("psql", "psql_uptime", psql_boot_time_epoch)
-
-
+            # host_db.write("psql", "psql_uptime", psql_boot_time_epoch)
 
     def run(self):
         # method_list = [method for method in dir(self.__class__) if method.startswith('__') is False]
@@ -93,9 +104,16 @@ class Psql_Alert(Alert):
                 value = self.run_per_database_query()
                 self.state = self.get_expected(value)
                 self.severity = self.get_severity(self.state)
+                self.message = self.set_message([self.config["type"].split(":")[1], value])
             elif self.config["alert"] == "postgres_uptime":
                 self.postgres_uptime()
-
+            elif has_key(self.config, "file"):
+                if file_exists(get_data_dir(), self.config["file"]) == self.config["file_existence"]:
+                    self.state = "OK"
+                else:
+                    self.state = "NOK"
+                self.severity = self.get_severity(self.state)
+                self.message = self.config["message"][self.state]
 
         else:
             if self.config["group"] == "per_database":
@@ -105,6 +123,7 @@ class Psql_Alert(Alert):
                 self.message = self.set_message(
                     [self.config["type"].split(":")[1], value, self.config["threshold_type"]])
 
+            # TO DO
             # if self.config["group"] == "ssl":
             #    pass
             # elif has_key(self.config, "expected") and self.config["group"] != "per_table":

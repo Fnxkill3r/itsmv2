@@ -5,7 +5,7 @@ from helper import *
 import psutil
 
 
-class Os_Alert(Alert):
+class OsAlert(Alert):
     def __init__(self, config, db_name):
         super().__init__(config)
         self.db_name = db_name

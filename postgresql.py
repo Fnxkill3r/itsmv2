@@ -5,7 +5,7 @@ from helper import file_exists, load_file
 def load_conn_values():
     # pgpass = load_file( / home / postgres /.pgpass)
     # for testes
-    pgpass = "192.168.56.170:50000:postgres:postgres:NjRkZDkwMThkZjY0MzdjNTRjYmZiYmYz"
+    pgpass = "192.168.1.110:50000:postgres:postgres:ZTZiNjhmMTRmZDJjNGZhOTlkODc5MTI0"
     ##
     return pgpass.split(":")
 

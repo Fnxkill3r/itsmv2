@@ -1,16 +1,21 @@
 import os
 import json
 import re
+from datetime import datetime
 
 
-def file_exists(file):
-    file_path = os.getcwd() + "/" + file
+def file_exists(file, my_path=os.getcwd()):
+    file_path = my_path + "/" + file
     return os.path.isfile(file_path)
 
 
-def load_file(file):
+def dir_exists(path):
+    return os.path.isdir(path)
+
+
+def load_file(file, my_path=os.getcwd()):
     if file_exists(file):
-        file_path = os.getcwd() + "/" + file
+        file_path = my_path + "/" + file
         try:
             f = open(file_path, "r")
             f_content = f.read()
@@ -77,3 +82,9 @@ def find_and_replace_multi(string, patterns, vals):
     for val in range(0, len(patterns)):
         string = string.replace(patterns[val], str(vals[val]), 1)
     return string
+
+
+def epoch_to_human(time):
+    datetime_uptime = datetime.fromtimestamp(time)
+    date_human_read = datetime_uptime.strftime("%Y-%m-%d %H:%M:%S")
+    return date_human_read
