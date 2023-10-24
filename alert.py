@@ -1,21 +1,6 @@
 from helper import *
 from _datetime import datetime
 
-'''{
-    'alert': 'postgres_uptime',
-    'type': 'psqlUptime',
-    'description': 'Check if postgres uptime restarted'
-    ,'query': 'SELECT pg_postmaster_start_time();',
-    'group': 'psql',
-    'message':
-      {'OK': 'Psql uptime is greater than last check. Uptime varValue',
-        'NOK': 'Psql has been restarted since last check. Uptime varValue'
-      },
-    'severity': 'WARNING',
-    'active': True
-    }
-'''
-
 
 class Alert:
 

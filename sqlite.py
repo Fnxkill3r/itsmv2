@@ -50,3 +50,4 @@ class Sqlite:
         self.cursor.execute(sql)
         rows = self.cursor.fetchall()
         return rows
+

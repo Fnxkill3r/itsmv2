@@ -1,0 +1,152 @@
+v elasticFilesystems                      The occupation of Elasticsearch filesystems - Default is %, change to GB in column threshold_type in table itsm.thresholds
+
+V postgresqlAutoConf                      Check if parameters are configured by alter system command
+V defaultTablespace                       Check if the default_tablespace parameter is configure with default_ts1 value
+V defaultTempTablespace                   Check if the temp_tablespaces parameter is configure with temp_ts1 value
+V checkUpTime                             Check if the uptime was changed
+
+
+
+v tuplesChanged50                         Check if any table changed more than 50% since last analyze
+v deadSize50                              Check if exists any table with useless space more than 50% of your size
+v withoutAnalyze7Days                     Check if exists any table without analyze at last 7 days
+
+V checkWrongDataTablespace                Check if exists any table in default tablespaces
+V checkWrongIndexTablespace               Check if exists any index in default tablespaces
+
+v postgresFilesystems                     The occupation of PostgreSQL filesystems - Default is %, change to GB in column threshold_type in table itsm.thresholds
+v postgresInstallFilesystems              The occupation of PostgreSQL installation filesystems  - Default is %, change to GB in column threshold_type in table itsm.thresholds
+
+V parameterPendingRestart                 Changed parameter which needs restart
+V parameterInvalidConfig                  Parameter with invalid configuration
+V hbaConfigError                          Lines with error in pg_hba.conf
+V archiveFailed10min                      Archive failed in 10 minutes
+
+V dataCacheRatio                          The pct of Datacache Ratio
+V commitRatio                             The pct of Commit Ratio
+V fetchRatio                              The pct of Fetch Ratio
+
+
+v checkPrimaryServerName                  Check if the primary server was changed
+X backupDatabase                          Check if exists at last one full backup in current timestamp -2 days
+X archiveFailedNetbackup                  Check if the last archive by postgres was archived successfully in NetBackup
+X replicaStatus                           Check if the replica status is streaming
+X replicaLsnDelay                         Check the delay on replica
+X replicaProcessRunning                   Check if the walsender or walreciver is running
+X pcsResourceUnmanaged                    Check if exists at last one resource unmanaged in Peacemaker Cluster
+
+
+X kibanaIsUp                              Check if Kibana is running
+X metricbeatIsUp                          Check if Metricbeat is running
+X elasticIsUp                             Check if Elastic is running
+
+
+
+X certificateExpirationTime               Check the SSL certificate expiration time
+X cmdbUpToDate                            Check if cmdb collect is running and the data is up to date
+X backupSQLite                            Check if exists the last Grafana SQLite database backup in netbackup
+X cmdbUpToDatePostgres                    Check if PostgreSQL cmdb collect is running and the data is up to date
+X cmdbUpToDateMongo                       Check if MongoDB cmdb collect is running and the data is up to date
+X checkAuditLogsSIEM                      Check if the last generated audit log file was sent to SIEM by sftp
+
+
+
+Database Level:
+
+['checkUpTime','All Environments','Check if the uptime was changed']
+['postgresqlAutoConf','All Environments','Check if parameters are configured by alter system command']
+['defaultTablespace','All Environments','Check if the default_tablespace parameter is configure with default_ts]
+['defaultTempTablespace','All Environments','Check if the temp_tablespaces parameter is configure with temp_ts']
+['parameterPendingRestart','All Environments','Changed parameter which needs restart']
+['parameterInvalidConfig','All Environments','Parameter with invalid configuration']
+['hbaConfigError','All Environments','Lines with error in pg_hba.conf']
+['archiveFailed10min','All Environments','Archive failed in last 10 minutes']
+
+
+Table Level:
+
+['tuplesChanged50','All Environments','Check if any table changed more than 50% since last analyze']
+['deadSize50','All Environments','Check if exists any table with useless space more than 50% of your size']
+['withoutAnalyze7Days','All Environments','Check if exists any table without analyze at last 7 days']
+['checkWrongDataTablespace','All Environments','Check if exists any table in default tablespaces']
+['checkWrongIndexTablespace','All Environments','Check if exists any index in default tablespaces']
+['dataCacheRatio','All Environments','The pct of Datacache Ratio']
+['commitRatio','All Environments','The pct of Commit Ratio']
+['fetchRatio','All Environments','The pct of Fetch Ratio']
+
+
+
+Filesystems:
+
+['postgresInstallFilesystems','All Environments','The occupation of PostgreSQL installation filesystems  - Default is %, change to GB in column threshold_type in table itsm.thresholds']
+['postgresFilesystems','All Environments','The occupation of PostgreSQL filesystems - Default is %, change to GB in column threshold_type in table itsm.thresholds']
+
+
+
+Certificates:
+['certificateExpirationTime','All Environments','Check the SSL certificate expiration time']
+
+
+Backups:
+['archiveFailedNetbackup',2,'Check if the last archive by postgres was archived successfully in NetBackup'
+
+
+Process:
+['kibanaIsUp','All Environments','Check if Kibana is running']
+['metricbeatIsUp','All Environments','Check if Metricbeat is running']
+['elasticIsUp','All Environments','Check if Elastic is running']
+
+['elasticFilesystems','All Environments','The occupation of Elasticsearch filesystems - Default is %, change to GB in column threshold_type in table itsm.thresholds']
+
+CMDB:
+
+['cmdbUpToDate','All Environments','Check if cmdb collect is running and the data is up to date']
+['cmdbUpToDatePostgres','All Environments','Check if PostgreSQL cmdb collect is running and the data is up to date']
+['cmdbUpToDateMongo','All Environments','Check if MongoDB cmdb collect is running and the data is up to date']
+['backupSQLite','All Environments','Check if exists the last Grafana SQLite database backup in netbackup']
+['checkAuditLogsSIEM','All Environments','Check if the last generated audit log file was sent to SIEM by sftp']
+
+Replica:
+['checkPrimaryServerName',4,'Check if the primary server was changed']
+['replicaStatus',3,'Check if the replica status is streaming']
+['replicaLsnDelay',5,'Check the delay on replica']
+['replicaProcessRunning',3,'Check if the walsender or walreciver is running']
+
+['pcsResourceUnmanaged',2,'Check if exists at last one resource unmanaged in Peacemaker Cluster']
+
+
+from cryptography import x509
+import socket
+import ssl
+import sys
+
+hostname = sys.argv[1]
+
+# create default context
+context = ssl.create_default_context()
+
+# override context so that it can get expired cert
+context.check_hostname = False
+context.verify_mode = ssl.CERT_NONE
+
+with socket.create_connection((hostname, 443)) as sock:
+    with context.wrap_socket(sock, server_hostname=hostname) as ssock:
+        print("SSL/TLS version:", ssock.version())
+        print()
+
+        # get cert in DER format
+        data = ssock.getpeercert(True)
+        print("Data:", data)
+        print()
+
+        # convert cert to PEM format
+        pem_data = ssl.DER_cert_to_PEM_cert(data)
+        print("PEM cert:", pem_data)
+
+        # pem_data in string. convert to bytes using str.encode()
+        # extract cert info from PEM format
+        cert_data = x509.load_pem_x509_certificate(str.encode(pem_data))
+
+        # show cert expiry date
+        print("Expiry date:", cert_data.not_valid_after)
+        print()

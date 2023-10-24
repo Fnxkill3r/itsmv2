@@ -283,5 +283,33 @@
         },
         "severity": "WARNING",
         "active": true
+    },
+    {
+        "alert": "check_primary_server_name",
+        "environment": "Replica",
+        "type": "checkPrimaryServerName",
+        "description": "Check if the primary server was changed.",
+        "group" : "replica",
+        "message": {
+            "OK": "No primary server change.",
+            "NOK": "Primary serve has changed: new primary: var_value"
+        },
+        "severity": "WARNING",
+        "active": true
+    },
+    {
+        "alert": "replica_status",
+        "environment": "Replica",
+        "type": "replicaStatus",
+        "description": "Check if the replica status is streaming.",
+        "query":  "select count(1) from  pg_catalog.pg_stat_replication where state = 'streaming'",
+	    "expected": 0,
+        "group" : "replica",
+        "message": {
+            "OK": "Streaming count: var_value. Replica streaming",
+            "NOK": "Streaming count: var_value. No streaming found."
+        },
+        "severity": "WARNING",
+        "active": true
     }
 ]

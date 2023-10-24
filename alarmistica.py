@@ -5,14 +5,14 @@ from psqlalert import PsqlAlert
 from filesystemalert import FilesystemAlert
 from sqlite import Sqlite
 import psutil
-import os
+import socket
 
 sqlite_db = "itsm.db"
 
 
 def first_run():
     if not file_exists(sqlite_db):
-        hostname = os.name
+        hostname = socket.gethostname()
         boot_time = int(psutil.boot_time())
         host_db = Sqlite(sqlite_db)
         host_db.run_query("CREATE TABLE host ( 'name'	TEXT,  'uptime' INTEGER);")
@@ -34,7 +34,7 @@ def set_filesystem_config(dic_array):
                 filesystems.append({"alert": template["alert"], "environment": template["environment"],
                                     "type": template["type"] + ":" + current_fs, "description": template["description"],
                                     "group": template["group"], "message": template["message"],
-                                    "thresholds": thresholds, "active": True})
+                                    "thresholds": thresholds, "threshold_type": threshold_type, "active": True})
     return filesystems
 
 
@@ -52,22 +52,24 @@ filesystem_config_dic_array = set_filesystem_config(json_to_dic("filesystem_aler
 
 current_os_alerts = []
 for cnf in os_config_dic_array:
-    current_os_alerts.append(OsAlert(cnf, "itsm.db"))
+    if cnf["active"]:
+        current_os_alerts.append(OsAlert(cnf, "itsm.db"))
 
 #PSQL
 current_psql_alerts = []
 psql_databases = psqlalert.get_databases()
 
 for cnf in psql_config_dic_array:
-    if cnf["group"] != "per_database" and cnf["group"] != "per_table":
-        current_psql_alerts.append(PsqlAlert(cnf, "itsm.db"))
-    else:
-        conf = cnf["type"]
-        query = cnf["query"]
-        for db in psql_databases:
-            cnf.update({"type": conf + ":" + db})
-            cnf.update({"query": query.replace("var_database_name", db, 1)})
+    if cnf["active"]:
+        if cnf["group"] != "per_database" and cnf["group"] != "per_table":
             current_psql_alerts.append(PsqlAlert(cnf, "itsm.db"))
+        else:
+            conf = cnf["type"]
+            query = cnf["query"]
+            for db in psql_databases:
+                cnf.update({"type": conf + ":" + db})
+                cnf.update({"query": query.replace("var_database_name", db, 1)})
+                current_psql_alerts.append(PsqlAlert(cnf, "itsm.db"))
 
 #Filesystems
 current_filesystem_alerts = []

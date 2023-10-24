@@ -1,6 +1,8 @@
 from alert import *
 from postgresql import *
 from sqlite import Sqlite
+import socket
+import psutil
 
 
 def get_databases():
@@ -66,7 +68,7 @@ class PsqlAlert(Alert):
 
         # print(psql_boot_time_epoch)
         host_db = Sqlite(self.db_name)
-        tables_query = "SELECT name FROM sqlite_schema WHERE type ='table' AND name NOT LIKE 'sqlite_%';"
+        tables_query = "SELECT name FROM sqlite_master WHERE type ='table' AND name NOT LIKE 'sqlite_%';"
         tables = host_db.run_query(tables_query)
         total = 0
         for table in tables:
@@ -92,6 +94,22 @@ class PsqlAlert(Alert):
 
             # host_db.write("psql", "psql_uptime", psql_boot_time_epoch)
 
+    def check_primary_server_name(self):
+        host_db = Sqlite(self.db_name)
+        query = "SELECT name FROM host ORDER BY uptime LIMIT 1"
+        name = host_db.run_query(query)[0][0]
+        self.state = "OK" if name == socket.gethostname() else "NOK"
+        self.severity = self.get_severity(self.state)
+        self.message = self.set_message([name])
+        query_host = "delete from host;"
+        host_db.write(query_host)
+        query_host = "INSERT INTO host (name, uptime) VALUES ('{}','{}')".format(socket.gethostname(), psutil.boot_time())
+        host_db.write(query_host)
+
+
+
+
+
     def run(self):
         # method_list = [method for method in dir(self.__class__) if method.startswith('__') is False]
         if self.get_category() == "ok_nok":
@@ -107,11 +125,15 @@ class PsqlAlert(Alert):
                 self.message = self.set_message([self.config["type"].split(":")[1], value])
             elif self.config["alert"] == "postgres_uptime":
                 self.postgres_uptime()
+            elif self.config["alert"] == "check_primary_server_name":
+                self.check_primary_server_name()
+            elif self.config["alert"] == "replica_status":
+                value = self.run_generic_query()
+                self.state = "OK" if value >= 1 else "NOK"
+                self.severity = self.get_severity(self.state)
+                self.message = self.set_message([value])
             elif has_key(self.config, "file"):
-                if file_exists(get_data_dir(), self.config["file"]) == self.config["file_existence"]:
-                    self.state = "OK"
-                else:
-                    self.state = "NOK"
+                self.state = "OK" if file_exists(get_data_dir(), self.config["file"]) == self.config["file_existence"] else "NOK"
                 self.severity = self.get_severity(self.state)
                 self.message = self.config["message"][self.state]
 
