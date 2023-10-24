@@ -72,9 +72,7 @@ class PsqlAlert(Alert):
         tables = host_db.run_query(tables_query)
         total = 0
         for table in tables:
-            if table[0] == "psql":
-                total = 1
-
+            total = 1 if table[0] == "psql" else 0
         if total < 1:
             host_db.run_query("CREATE TABLE psql ( 'port'	TEXT,  'uptime' TEXT);")
             uptime_query = "INSERT INTO psql (port, uptime) VALUES ('{}','{}')".format("50000", psql_boot_time_epoch)
@@ -82,7 +80,6 @@ class PsqlAlert(Alert):
             self.state = "OK"
             self.severity = "NORMAL"
             self.message = "First run: No database value yet. Uptime: " + time
-
         else:
             query = "SELECT uptime FROM psql ORDER BY uptime LIMIT 1"
             saved_uptime = host_db.run_query(query)[0][0]
@@ -100,15 +97,30 @@ class PsqlAlert(Alert):
         name = host_db.run_query(query)[0][0]
         self.state = "OK" if name == socket.gethostname() else "NOK"
         self.severity = self.get_severity(self.state)
-        self.message = self.set_message([name])
+        self.message = self.set_message([socket.gethostname()])
         query_host = "delete from host;"
         host_db.write(query_host)
-        query_host = "INSERT INTO host (name, uptime) VALUES ('{}','{}')".format(socket.gethostname(), psutil.boot_time())
+        query_host = "INSERT INTO host (name, uptime) VALUES ('{}','{}')".format(socket.gethostname(),
+                                                                                 psutil.boot_time())
         host_db.write(query_host)
 
+    def replica_status(self):
+        value = self.run_generic_query()
+        self.state = "OK" if value >= 1 else "NOK"
+        self.severity = self.get_severity(self.state)
+        self.message = self.set_message([value])
 
+    def replica_lsn_delay(self):
+        value = self.run_generic_query()
+        self.state = self.get_expected(value)
+        self.severity = self.get_severity(self.state)
+        self.message = self.set_message([value]) if self.state == "NOK" else self.config["message"]["OK"]
 
-
+    def replica_process_running(self):
+        value = self.run_generic_query()
+        self.state = "OK" if value >= 1 else "NOK"
+        self.severity = self.get_severity(self.state)
+        self.message = self.config["message"][self.state]
 
     def run(self):
         # method_list = [method for method in dir(self.__class__) if method.startswith('__') is False]
@@ -128,12 +140,14 @@ class PsqlAlert(Alert):
             elif self.config["alert"] == "check_primary_server_name":
                 self.check_primary_server_name()
             elif self.config["alert"] == "replica_status":
-                value = self.run_generic_query()
-                self.state = "OK" if value >= 1 else "NOK"
-                self.severity = self.get_severity(self.state)
-                self.message = self.set_message([value])
+                self.replica_status()
+            elif self.config["alert"] == "replica_lsn_delay":
+                self.replica_lsn_delay()
+            elif self.config["alert"] == "replica_process_running":
+                self.replica_process_running()
             elif has_key(self.config, "file"):
-                self.state = "OK" if file_exists(get_data_dir(), self.config["file"]) == self.config["file_existence"] else "NOK"
+                self.state = "OK" if file_exists(get_data_dir(), self.config["file"]) == self.config[
+                    "file_existence"] else "NOK"
                 self.severity = self.get_severity(self.state)
                 self.message = self.config["message"][self.state]
 

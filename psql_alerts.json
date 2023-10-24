@@ -34,7 +34,7 @@
         "environment": "All",
         "type": "checkCertificate",
         "description": "Check if there is a certificate file",
-        "file": "filename",
+        "file": "lxpsqllabd.crt",
         "file_existence": true,
         "group" : "ssl",
         "message": {
@@ -291,8 +291,22 @@
         "description": "Check if the primary server was changed.",
         "group" : "replica",
         "message": {
-            "OK": "No primary server change.",
+            "OK": "No primary server change. Primary server: var_value",
             "NOK": "Primary serve has changed: new primary: var_value"
+        },
+        "severity": "WARNING",
+        "active": true
+    },
+    {
+        "alert": "replica_process_running",
+        "environment": "Replica",
+        "type": "replicaProcessRunning",
+        "description": "Check if the walsender or walreciver is running.",
+        "query":  "select count(1) from  pg_catalog.pg_stat_activity where backend_type in ('walsender','walreceiver')",
+        "group" : "replica",
+        "message": {
+            "OK": "Walsender or walreceiver is running.",
+            "NOK": "Walsender and walreceiver not running."
         },
         "severity": "WARNING",
         "active": true
@@ -303,11 +317,25 @@
         "type": "replicaStatus",
         "description": "Check if the replica status is streaming.",
         "query":  "select count(1) from  pg_catalog.pg_stat_replication where state = 'streaming'",
-	    "expected": 0,
         "group" : "replica",
         "message": {
             "OK": "Streaming count: var_value. Replica streaming",
             "NOK": "Streaming count: var_value. No streaming found."
+        },
+        "severity": "WARNING",
+        "active": true
+    },
+    {
+        "alert": "replica_lsn_delay",
+        "environment": "Replica",
+        "type": "replicaLsnDelay",
+        "description": "Check the delay on replica.",
+        "query":  "select (pg_wal_lsn_diff(pg_current_wal_lsn(),sent_lsn) / 1024)::bigint from pg_catalog.pg_stat_replication",
+        "expected": 0,
+        "group" : "replica",
+        "message": {
+            "OK": "No delay on replica.",
+            "NOK": "Delay on replica: var_value"
         },
         "severity": "WARNING",
         "active": true

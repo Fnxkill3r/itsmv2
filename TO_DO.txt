@@ -28,13 +28,14 @@ V fetchRatio                              The pct of Fetch Ratio
 
 
 v checkPrimaryServerName                  Check if the primary server was changed
+
+v replicaStatus                           Check if the replica status is streaming
+v replicaLsnDelay                         Check the delay on replica
+V replicaProcessRunning                   Check if the walsender or walreciver is running
+
+X pcsResourceUnmanaged                    Check if exists at last one resource unmanaged in Peacemaker Cluster
 X backupDatabase                          Check if exists at last one full backup in current timestamp -2 days
 X archiveFailedNetbackup                  Check if the last archive by postgres was archived successfully in NetBackup
-X replicaStatus                           Check if the replica status is streaming
-X replicaLsnDelay                         Check the delay on replica
-X replicaProcessRunning                   Check if the walsender or walreciver is running
-X pcsResourceUnmanaged                    Check if exists at last one resource unmanaged in Peacemaker Cluster
-
 
 X kibanaIsUp                              Check if Kibana is running
 X metricbeatIsUp                          Check if Metricbeat is running
