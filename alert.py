@@ -1,5 +1,5 @@
 from helper import *
-from _datetime import datetime
+from datetime import datetime
 
 
 class Alert:
@@ -23,8 +23,6 @@ class Alert:
     def get_category(self):
         return "threshold" if has_key(self.config, "thresholds") else "ok_nok"
 
-    def get_query(self):
-        return self.config["query"] if has_key(self.config, "query") else "not_set"
 
     def get_state(self):
         return "OK" if self.severity == "NORMAL" else "NOK"
@@ -66,3 +64,7 @@ class Alert:
     def get_run_timestamp(self):
         dt = datetime.now()
         return datetime.timestamp(dt)
+
+
+    def get_query(self):
+        return self.config["query"] if has_key(self.config, "query") else "not_set"

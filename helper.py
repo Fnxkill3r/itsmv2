@@ -37,6 +37,10 @@ def json_to_dic(file):
         return my_file
 
 
+def load_json(my_json):
+    return json.loads(my_json)
+
+
 def has_key(dic, key):
     if key in dic.keys():
         return True

@@ -6,6 +6,8 @@ from filesystemalert import FilesystemAlert
 from sqlite import Sqlite
 import psutil
 import socket
+import subprocess
+import json
 
 sqlite_db = "itsm.db"
 
@@ -38,6 +40,19 @@ def set_filesystem_config(dic_array):
     return filesystems
 
 
+def get_pods(dic_array):
+    specific_pod = []
+    template = get_dict_from_array(dic_array, "template")
+    for dic in dic_array:
+        if not has_key(dic, "template"):
+            for pod in dic["names"]:
+                specific_pod.append([pod,dic["severity"]])
+
+    result = subprocess.getoutput('podman ps -a --format json')
+    pods = load_json(result)
+    return pods
+
+
 first_run()
 
 os_config_dic_array = json_to_dic("os_alerts.json")
@@ -55,7 +70,7 @@ for cnf in os_config_dic_array:
     if cnf["active"]:
         current_os_alerts.append(OsAlert(cnf, "itsm.db"))
 
-#PSQL
+# PSQL
 current_psql_alerts = []
 psql_databases = psqlalert.get_databases()
 
@@ -71,7 +86,7 @@ for cnf in psql_config_dic_array:
                 cnf.update({"query": query.replace("var_database_name", db, 1)})
                 current_psql_alerts.append(PsqlAlert(cnf, "itsm.db"))
 
-#Filesystems
+# Filesystems
 current_filesystem_alerts = []
 for cnf in filesystem_config_dic_array:
     current_filesystem_alerts.append(FilesystemAlert(cnf))
