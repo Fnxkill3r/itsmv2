@@ -3,20 +3,20 @@ from helper import file_exists, load_file
 
 
 def load_conn_values():
-    # pgpass = load_file( / home / postgres /.pgpass)
+    # pgpass = load_file("/home/postgres/.pgpass")
     # for testes
-    pgpass = "192.168.1.110:50000:postgres:postgres:ZTZiNjhmMTRmZDJjNGZhOTlkODc5MTI0"
+    pgpass = "localhost:50000:postgres:postgres:NzljOGRiYmNjZThiNWZhYjYxZDhlNzc1"
     ##
     return pgpass.split(":")
 
 
 class Psql:
-    def __init__(self):
+    def __init__(self, port):
         self.host, self.port, self.database, self.user, self.password = load_conn_values()
         self.conn = psycopg2.connect(
             host=self.host,
             database=self.database,
-            port=self.port,
+            port=port,
             user=self.user,
             password=self.password
         )

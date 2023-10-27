@@ -5,8 +5,8 @@ import socket
 import psutil
 
 
-def get_databases():
-    conn = Psql()
+def get_databases(port):
+    conn = Psql(port)
     psql_databases = conn.run_query("select datname from pg_catalog.pg_database where datname not in ('dba')")
     databases = []
     for db in psql_databases:
@@ -14,18 +14,18 @@ def get_databases():
     return databases
 
 
-def get_data_dir():
-    conn = Psql()
+def get_data_dir(port):
+    conn = Psql(port)
     return conn.run_query("select setting from pg_catalog.pg_settings where name='data_directory'")[0][0]
 
 
 class PsqlAlert(Alert):
-    def __init__(self, config, db_name):
+    def __init__(self, config, db_name, port):
         super().__init__(config)
         self.db_name = db_name
-        self.conn = Psql()
+        self.conn = Psql(port)
         self.datadir = ""
-        self.databases = get_databases()
+        self.databases = get_databases(port)
         self.run()
 
         # self.run()
@@ -150,7 +150,7 @@ class PsqlAlert(Alert):
                     "file_existence"] else "NOK"
                 self.severity = self.get_severity(self.state)
                 self.message = self.config["message"][self.state]
-
+            self.run_timestamp = self.get_run_timestamp()
         else:
             if self.config["group"] == "per_database":
                 value = self.run_per_database_query()
@@ -158,6 +158,7 @@ class PsqlAlert(Alert):
                 self.state = self.get_state()
                 self.message = self.set_message(
                     [self.config["type"].split(":")[1], value, self.config["threshold_type"]])
+                self.run_timestamp = self.get_run_timestamp()
 
             # TO DO
             # if self.config["group"] == "ssl":
