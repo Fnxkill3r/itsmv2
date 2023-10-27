@@ -22,6 +22,7 @@ def get_data_dir(port):
 class PsqlAlert(Alert):
     def __init__(self, config, db_name, port):
         super().__init__(config)
+        self.port = port
         self.db_name = db_name
         self.conn = Psql(port)
         self.datadir = ""
@@ -75,7 +76,7 @@ class PsqlAlert(Alert):
             total = 1 if table[0] == "psql" else 0
         if total < 1:
             host_db.run_query("CREATE TABLE psql ( 'port'	TEXT,  'uptime' TEXT);")
-            uptime_query = "INSERT INTO psql (port, uptime) VALUES ('{}','{}')".format("50000", psql_boot_time_epoch)
+            uptime_query = "INSERT INTO psql (port, uptime) VALUES ('{}','{}')".format(self.port, psql_boot_time_epoch)
             host_db.write(uptime_query)
             self.state = "OK"
             self.severity = "NORMAL"
@@ -146,7 +147,7 @@ class PsqlAlert(Alert):
             elif self.config["alert"] == "replica_process_running":
                 self.replica_process_running()
             elif has_key(self.config, "file"):
-                self.state = "OK" if file_exists(get_data_dir(), self.config["file"]) == self.config[
+                self.state = "OK" if file_exists(get_data_dir(self.port), self.config["file"]) == self.config[
                     "file_existence"] else "NOK"
                 self.severity = self.get_severity(self.state)
                 self.message = self.config["message"][self.state]
