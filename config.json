@@ -1,0 +1,9 @@
+    {
+      "type": "single",
+      "active": {
+        "os": true,
+        "filesystem": true,
+        "podman": true,
+        "postgres" : true
+        }
+    }

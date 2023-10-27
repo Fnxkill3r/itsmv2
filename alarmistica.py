@@ -11,6 +11,9 @@ import subprocess
 import json
 
 sqlite_db = "itsm.db"
+setup = json_to_dic("config.json")
+alarmistic_type = setup["type"]
+
 
 
 def first_run():
@@ -82,6 +85,9 @@ def run_psql(port):
     psql_databases = get_databases(port)
 
     for cnf in psql_config_dic_array:
+        if alarmistic_type.lower() == "single" and cnf["environment"].lower() != "all":
+            cnf["active"] = False
+
         if cnf["active"]:
             if cnf["group"] != "per_database" and cnf["group"] != "per_table":
                 current_psql_alerts.append(PsqlAlert(cnf, "itsm.db", port))
@@ -112,8 +118,11 @@ def run_pods():
 
 
 def run(port):
+
+
     first_run()
     all_alerts = []
+
     if file_exists("osalert.py") and file_exists("os_alerts.json"):
         for a in run_os():
             all_alerts.append(a)
@@ -142,7 +151,7 @@ if __name__ == '__main__':
             # pgp = load_file("/home/postgres/.pgpass").split(":")[1]
             pgp = "localhost:50000:postgres:postgres:NzljOGRiYmNjZThiNWZhYjYxZDhlNzc1".split(":")[1]
             if port == pgp:
-                print("OK")
+                print("Running")
                 run(port)
             else:
                 print("No pgpass found for setted port")
