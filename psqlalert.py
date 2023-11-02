@@ -3,6 +3,7 @@ from postgresql import *
 from sqlite import Sqlite
 import socket
 import psutil
+import subprocess
 
 
 def get_databases(port):
@@ -122,6 +123,13 @@ class PsqlAlert(Alert):
         self.state = "OK" if value >= 1 else "NOK"
         self.severity = self.get_severity(self.state)
         self.message = self.config["message"][self.state]
+
+    def certificate_expiration_time(self):
+        data_dir = get_data_dir()
+        path = data_dir + "/" + self.config["file"]
+        full_string = "openssl x509 -enddate -noout -in" + path
+        result = subprocess.getoutput(full_string)
+        print(result)
 
     def run(self):
         # method_list = [method for method in dir(self.__class__) if method.startswith('__') is False]

@@ -4,18 +4,19 @@ import re
 from datetime import datetime
 
 
+def dir_exists(path):
+    return os.path.isdir(path)
+
+
 def file_exists(file, my_path=os.getcwd()):
     file_path = my_path + "/" + file
     return os.path.isfile(file_path)
 
 
-def dir_exists(path):
-    return os.path.isdir(path)
-
-
 def load_file(file, my_path=os.getcwd()):
-    if file_exists(file):
+    if file_exists(file, my_path):
         file_path = my_path + "/" + file
+        print(file_path)
         try:
             f = open(file_path, "r")
             f_content = f.read()

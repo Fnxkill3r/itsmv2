@@ -5,6 +5,7 @@ from psqlalert import PsqlAlert, get_databases
 from podmanalert import PodmanAlert
 from filesystemalert import FilesystemAlert
 from sqlite import Sqlite
+from postgresql import *
 import psutil
 import socket
 import subprocess
@@ -149,17 +150,17 @@ if __name__ == '__main__':
         if sys.argv[1].isdigit():
             port = sys.argv[1]
             # pgp = load_file("/home/postgres/.pgpass").split(":")[1]
-            pgp = "localhost:50000:postgres:postgres:NzljOGRiYmNjZThiNWZhYjYxZDhlNzc1".split(":")[1]
+            pgp = "192.168.56.237:50000:postgres:postgres:NzljOGRiYmNjZThiNWZhYjYxZDhlNzc1".split(":")[1]
             if port == pgp:
-                print("Running")
-                run(port)
+                psq = Psql(port)
+                is_standby = psq.run_query("select pg_is_in_recovery()")[0][0]
+                if not is_standby:
+                    run(port)
             else:
                 print("No pgpass found for setted port")
-
-
         else:
             print("First arg must be Port number")
-        first_run()
+
 #
 #    for alert in run_pods():
 #        print(alert)

@@ -9,7 +9,6 @@ class PodmanAlert(Alert):
         super().__init__(config)
         self.run()
 
-
     def set_message(self, values):
         message = self.get_message()
         return find_and_replace_multi(message, ["var_value", "var_value"],
