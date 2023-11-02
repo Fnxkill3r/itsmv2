@@ -2,14 +2,13 @@ import sys
 from helper import *
 from osalert import OsAlert
 from psqlalert import PsqlAlert, get_databases
-from podmanalert import PodmanAlert
-from filesystemalert import FilesystemAlert
+from podmanalert import PodmanAlert, set_pods_config
+from filesystemalert import FilesystemAlert, set_filesystem_config
 from sqlite import Sqlite
 from postgresql import *
 import psutil
 import socket
-import subprocess
-import json
+
 
 sqlite_db = "itsm.db"
 setup = json_to_dic("config.json")
@@ -25,50 +24,6 @@ def first_run():
         host_db.run_query("CREATE TABLE host ( 'name'	TEXT,  'uptime' INTEGER);")
         query_host = "INSERT INTO host (name, uptime) VALUES ('{}','{}')".format(hostname, boot_time)
         host_db.write(query_host)
-
-
-def set_filesystem_config(dic_array):
-    template = get_dict_from_array(dic_array, "template")
-    filesystems = []
-    for dic in dic_array:
-        if not has_key(dic, "template"):
-            for current_fs in dic["filesystems"]:
-                if has_key(dic, "use_template"):
-                    thresholds, threshold_type = template["thresholds"], template["threshold_type"]
-                else:
-                    thresholds, threshold_type = dic["thresholds"], dic["threshold_type"]
-
-                filesystems.append({"alert": template["alert"], "environment": template["environment"],
-                                    "type": template["type"] + ":" + current_fs, "description": template["description"],
-                                    "group": template["group"], "message": template["message"],
-                                    "thresholds": thresholds, "threshold_type": threshold_type, "active": True})
-    return filesystems
-
-
-def set_pods_config(dic_array):
-    result = subprocess.getoutput('podman ps -a --format json')
-    my_dic = json.loads(result)
-    specific_pod = []
-    pods = []
-    template = get_dict_from_array(dic_array, "template")
-    for dic in dic_array:
-        if not has_key(dic, "template"):
-            for name in dic["names"]:
-                specific_pod.append([name, dic["severity"]])
-    for mpod in my_dic:
-        position = 0
-        exists = False
-        for i in range(0, len(specific_pod)):
-            if specific_pod[i][0] == mpod["Names"][0]:
-                exists = True
-                position = i
-
-        severity = specific_pod[position][1] if exists else template["severity"]
-        pods.append({"alert": template["alert"], "environment": template["environment"],
-                     "type": template["type"] + ":" + mpod["Names"][0], "description": template["description"],
-                     "group": template["group"], "message": template["message"],
-                     "severity": severity, "active": True, "rstate": mpod["State"], "rstatus": mpod["Status"]})
-    return pods
 
 
 def run_os():
@@ -118,9 +73,7 @@ def run_pods():
     return current_pod_alerts
 
 
-def run(port):
-
-
+def run(psqlport):
     first_run()
     all_alerts = []
 
@@ -135,11 +88,12 @@ def run(port):
             all_alerts.append(a)
 
     if file_exists("psqlalert.py") and file_exists("psql_alerts.json"):
-        for a in run_psql(port):
+        for a in run_psql(psqlport):
             all_alerts.append(a)
 
     for alert in all_alerts:
-        print(alert)
+        full_csv = "SERVIDOR: " + get_hostname() + "; SITE:" + get_site() + "; AMBIENTE:" + get_environment() + ";" + alert.return_csv()
+        print(full_csv)
 
 
 if __name__ == '__main__':
@@ -149,8 +103,8 @@ if __name__ == '__main__':
     else:
         if sys.argv[1].isdigit():
             port = sys.argv[1]
-            # pgp = load_file("/home/postgres/.pgpass").split(":")[1]
-            pgp = "192.168.56.237:50000:postgres:postgres:NzljOGRiYmNjZThiNWZhYjYxZDhlNzc1".split(":")[1]
+            pgp = load_file(".pgpass", "/home/postgres").split(":")[1]
+
             if port == pgp:
                 psq = Psql(port)
                 is_standby = psq.run_query("select pg_is_in_recovery()")[0][0]
@@ -161,6 +115,4 @@ if __name__ == '__main__':
         else:
             print("First arg must be Port number")
 
-#
-#    for alert in run_pods():
-#        print(alert)
+

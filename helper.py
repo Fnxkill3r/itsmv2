@@ -1,6 +1,7 @@
 import os
 import json
 import re
+import socket
 from datetime import datetime
 
 
@@ -9,14 +10,13 @@ def dir_exists(path):
 
 
 def file_exists(file, my_path=os.getcwd()):
-    file_path = my_path + "/" + file
+    file_path = my_path + file if my_path[-1] == "/" else my_path + "/" + file
     return os.path.isfile(file_path)
 
 
 def load_file(file, my_path=os.getcwd()):
     if file_exists(file, my_path):
-        file_path = my_path + "/" + file
-        print(file_path)
+        file_path = my_path + file if my_path[-1] == "/" else my_path + "/" + file
         try:
             f = open(file_path, "r")
             f_content = f.read()
@@ -93,3 +93,28 @@ def epoch_to_human(time):
     datetime_uptime = datetime.fromtimestamp(time)
     date_human_read = datetime_uptime.strftime("%Y-%m-%d %H:%M:%S")
     return date_human_read
+
+
+def get_hostname():
+    return socket.gethostname().split(".")[0]
+
+
+def get_site():
+    site = get_hostname()[0:2]
+    if site.lower() != "vs" and site.lower() != "lx":
+        site = "na"
+    return site
+
+
+def get_environment():
+    env_dic = {
+        "d": "DES",
+        "q": "QLY",
+        "i": "TSI",
+        "t": "TST",
+        "c": "CER",
+        "p": "PRD"
+
+    }
+    env = get_hostname().strip('1234567890')[-1]
+    return env_dic[env] if has_key(env_dic, env) else "na"

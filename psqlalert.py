@@ -125,7 +125,7 @@ class PsqlAlert(Alert):
         self.message = self.config["message"][self.state]
 
     def certificate_expiration_time(self):
-        data_dir = get_data_dir()
+        data_dir = get_data_dir(self.port)
         path = data_dir + "/" + self.config["file"]
         full_string = "openssl x509 -enddate -noout -in" + path
         result = subprocess.getoutput(full_string)

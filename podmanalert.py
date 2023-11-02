@@ -4,6 +4,32 @@ from alert import *
 from helper import *
 
 
+def set_pods_config(dic_array):
+    result = subprocess.getoutput('podman ps -a --format json')
+    my_dic = json.loads(result)
+    specific_pod = []
+    pods = []
+    template = get_dict_from_array(dic_array, "template")
+    for dic in dic_array:
+        if not has_key(dic, "template"):
+            for name in dic["names"]:
+                specific_pod.append([name, dic["severity"]])
+    for mpod in my_dic:
+        position = 0
+        exists = False
+        for i in range(0, len(specific_pod)):
+            if specific_pod[i][0] == mpod["Names"][0]:
+                exists = True
+                position = i
+
+        severity = specific_pod[position][1] if exists else template["severity"]
+        pods.append({"alert": template["alert"], "environment": template["environment"],
+                     "type": template["type"] + ":" + mpod["Names"][0], "description": template["description"],
+                     "group": template["group"], "message": template["message"],
+                     "severity": severity, "active": True, "rstate": mpod["State"], "rstatus": mpod["Status"]})
+    return pods
+
+
 class PodmanAlert(Alert):
     def __init__(self, config):
         super().__init__(config)

@@ -3,6 +3,24 @@ from helper import *
 import psutil
 
 
+def set_filesystem_config(dic_array):
+    template = get_dict_from_array(dic_array, "template")
+    filesystems = []
+    for dic in dic_array:
+        if not has_key(dic, "template"):
+            for current_fs in dic["filesystems"]:
+                if has_key(dic, "use_template"):
+                    thresholds, threshold_type = template["thresholds"], template["threshold_type"]
+                else:
+                    thresholds, threshold_type = dic["thresholds"], dic["threshold_type"]
+
+                filesystems.append({"alert": template["alert"], "environment": template["environment"],
+                                    "type": template["type"] + ":" + current_fs, "description": template["description"],
+                                    "group": template["group"], "message": template["message"],
+                                    "thresholds": thresholds, "threshold_type": threshold_type, "active": True})
+    return filesystems
+
+
 class FilesystemAlert(Alert):
     def __init__(self, config):
         super().__init__(config)
@@ -13,11 +31,13 @@ class FilesystemAlert(Alert):
         if self.config["threshold_type"] == "%":
             return float(100 - disk_usage.percent)
         else:
-            return round(disk_usage.free / (2 ** 20), 2) if self.config["threshold_type"] == "mb" else round(disk_usage.free / (2 ** 30), 2)
+            return round(disk_usage.free / (2 ** 20), 2) if self.config["threshold_type"] == "mb" else round(
+                disk_usage.free / (2 ** 30), 2)
 
     def set_message(self, values):
         message = self.get_message()
-        return find_and_replace_multi(message, ["var_filesystem_name", "var_threshold_value", "var_threshold_type"], values)
+        return find_and_replace_multi(message, ["var_filesystem_name", "var_threshold_value", "var_threshold_type"],
+                                      values)
 
     def run(self):
         self.name = self.config["alert"]
@@ -31,5 +51,3 @@ class FilesystemAlert(Alert):
             self.severity = "CRITICAL"
             self.state = "NOK"
             self.message = "Filesystem: {} does not exist. ".format(my_fs)
-
-

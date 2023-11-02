@@ -23,7 +23,6 @@ class Alert:
     def get_category(self):
         return "threshold" if has_key(self.config, "thresholds") else "ok_nok"
 
-
     def get_state(self):
         return "OK" if self.severity == "NORMAL" else "NOK"
 
@@ -65,6 +64,10 @@ class Alert:
         dt = datetime.now()
         return datetime.timestamp(dt)
 
-
     def get_query(self):
         return self.config["query"] if has_key(self.config, "query") else "not_set"
+
+    def return_csv(self):
+        full_string = "state:" + self.state + "; severity:" + self.severity + "; type:" + self.type + \
+                      "; message:" + self.message + "; time:" + str(epoch_to_human(self.run_timestamp))
+        return full_string
