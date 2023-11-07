@@ -5,6 +5,15 @@ from helper import *
 import psutil
 
 
+def run_os(sqlite_db):
+    os_config_dic_array = json_to_dic("os_alerts.json")
+    current_os_alerts = []
+    for cnf in os_config_dic_array:
+        if cnf["active"]:
+            current_os_alerts.append(OsAlert(cnf, sqlite_db))
+    return current_os_alerts
+
+
 class OsAlert(Alert):
     def __init__(self, config, db_name):
         super().__init__(config)
@@ -36,7 +45,8 @@ class OsAlert(Alert):
             return [float(100 - (used_memory * 100) / total_memory)]
         else:
             return [round((total_memory - used_memory) / (2 ** 20), 2)] \
-                if self.config["threshold_type"].upper() == "MB" else [round((total_memory - used_memory) / (2 ** 30), 2)]
+                if self.config["threshold_type"].upper() == "MB" else [
+                round((total_memory - used_memory) / (2 ** 30), 2)]
 
     def cpu_avg_load(self):
         # Return OK id avg_usage < cpu_count/3 (last 5 min)
@@ -47,7 +57,7 @@ class OsAlert(Alert):
 
     def run(self):
         name = self.name
-        #method_list = [method for method in dir(self.__class__) if method.startswith('__') is False]
+        # method_list = [method for method in dir(self.__class__) if method.startswith('__') is False]
         if name == "system_uptime":
             values = self.system_uptime()
         elif name == "memory_usage":
@@ -61,6 +71,3 @@ class OsAlert(Alert):
         self.state = self.get_state()
         self.message = self.set_message(values)
         self.run_timestamp = self.get_run_timestamp()
-
-
-

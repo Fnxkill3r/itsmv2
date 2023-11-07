@@ -3,6 +3,14 @@ from helper import *
 import psutil
 
 
+def run_filesystem():
+    filesystem_config_dic_array = set_filesystem_config(json_to_dic("filesystem_alerts.json"))
+    current_filesystem_alerts = []
+    for cnf in filesystem_config_dic_array:
+        current_filesystem_alerts.append(FilesystemAlert(cnf))
+    return current_filesystem_alerts
+
+
 def set_filesystem_config(dic_array):
     template = get_dict_from_array(dic_array, "template")
     filesystems = []

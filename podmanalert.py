@@ -4,6 +4,13 @@ from alert import *
 from helper import *
 
 
+def run_pods():
+    podman_config_dic_array = set_pods_config(json_to_dic("podman_alerts.json"))
+    current_pod_alerts = []
+    for cnf in podman_config_dic_array:
+        current_pod_alerts.append(PodmanAlert(cnf))
+    return current_pod_alerts
+
 def set_pods_config(dic_array):
     result = subprocess.getoutput('podman ps -a --format json')
     my_dic = json.loads(result)

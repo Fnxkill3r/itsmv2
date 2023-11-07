@@ -20,6 +20,35 @@ def get_data_dir(port):
     return conn.run_query("select setting from pg_catalog.pg_settings where name='data_directory'")[0][0]
 
 
+def is_primary(port):
+    conn = Psql(port)
+    return True if not conn.run_query("select pg_is_in_recovery()")[0][0] else False
+
+
+def run_psql(psql_port, alarmistic_type, sqlite_db):
+    psql_config_dic_array = json_to_dic("psql_alerts.json")
+    current_psql_alerts = []
+    psql_databases = get_databases(psql_port)
+
+    for cnf in psql_config_dic_array:
+        if alarmistic_type.lower() == "single" and cnf["environment"].lower() != "all":
+            cnf["active"] = False
+        if alarmistic_type.lower() == "replica":
+            pass
+
+        if cnf["active"]:
+            if cnf["group"] != "per_database" and cnf["group"] != "per_table":
+                current_psql_alerts.append(PsqlAlert(cnf, sqlite_db, psql_port))
+            else:
+                conf = cnf["type"]
+                query = cnf["query"]
+                for db in psql_databases:
+                    cnf.update({"type": conf + ":" + db})
+                    cnf.update({"query": query.replace("var_database_name", db, 1)})
+                    current_psql_alerts.append(PsqlAlert(cnf, sqlite_db, psql_port))
+    return current_psql_alerts
+
+
 class PsqlAlert(Alert):
     def __init__(self, config, db_name, port):
         super().__init__(config)
