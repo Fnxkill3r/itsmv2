@@ -17,14 +17,19 @@ def file_exists(file, my_path=os.getcwd()):
 def load_file(file, my_path=os.getcwd()):
     if file_exists(file, my_path):
         file_path = my_path + file if my_path[-1] == "/" else my_path + "/" + file
-        try:
-            f = open(file_path, "r")
+        with open(file_path, "r") as f:
             f_content = f.read()
-        except FileNotFoundError as e:
-            print("Something went wrong when opening the file")
-            print(e)
-        finally:
             return f_content
+    else:
+        return "FileNotFoundError"
+
+
+def load_file_to_list(file, my_path=os.getcwd()):
+    if file_exists(file, my_path):
+        file_path = my_path + file if my_path[-1] == "/" else my_path + "/" + file
+        with open(file_path) as fp:
+            lines = fp.readlines()
+        return lines
     else:
         return "FileNotFoundError"
 

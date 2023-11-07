@@ -1,15 +1,23 @@
 import psycopg2
-from helper import file_exists, load_file
+from helper import file_exists, load_file_to_list
 
 
-def load_conn_values():
-    pgpass = load_file(".pgpass", "/home/postgres").strip()
-    return pgpass.split(":")
+def load_conn_values(port):
+    pgpass_list = load_file_to_list(".pgpass", "/home/postgres")
+    pgpass = ""
+    for line in pgpass_list:
+        if port in line and line.split(":")[0] == "localhost":
+            pgpass = line.strip()
+    return pgpass
+
+
+
 
 
 class Psql:
     def __init__(self, port):
-        self.host, self.port, self.database, self.user, self.password = load_conn_values()
+        self.pgpass = load_conn_values(port)
+        self.host, self.port, self.database, self.user, self.password = self.pgpass.split(":")
         self.conn = psycopg2.connect(
             host=self.host,
             database=self.database,

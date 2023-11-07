@@ -1,6 +1,7 @@
+
  class Logger:
-    def __init__(self,filename):
-        self.filename=filename
+    def __init__(self, filename):
+        self.filename = filename
         self.fp=None
     def logging(self,text):
         self.fp.write(text+'\n')

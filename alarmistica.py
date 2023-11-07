@@ -14,6 +14,8 @@ setup = json_to_dic("config.json")
 alarmistic_type = setup["type"]
 
 
+
+
 def first_run():
     if not file_exists(sqlite_db):
         hostname = socket.gethostname()
@@ -24,7 +26,7 @@ def first_run():
         host_db.write(query_host)
 
 
-def run(psql_port):
+def run(port):
     first_run()
     all_alerts = []
 
@@ -38,8 +40,8 @@ def run(psql_port):
         for a in run_pods():
             all_alerts.append(a)
 
-    if file_exists("psqlalert.py") and file_exists("psql_alerts.json") and is_primary(psql_port):
-        for a in run_psql(psql_port, alarmistic_type, sqlite_db):
+    if file_exists("psqlalert.py") and file_exists("psql_alerts.json") and is_primary(port):
+        for a in run_psql(port, alarmistic_type, sqlite_db):
             all_alerts.append(a)
 
     for alert in all_alerts:
@@ -54,11 +56,10 @@ if __name__ == '__main__':
     else:
         if sys.argv[1].isdigit():
             port = sys.argv[1]
-            pgp = load_file(".pgpass", "/home/postgres").split(":")[1]
-
-            if port == pgp:
-                run(port)
+            check_pgpass = load_conn_values(port)
+            if check_pgpass == "":
+                print("No pgpass line for localhost and setted port")
             else:
-                print("No pgpass found for setted port")
+                run(port)
         else:
             print("First arg must be Port number")
