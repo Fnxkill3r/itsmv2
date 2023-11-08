@@ -8,12 +8,11 @@ from sqlite import Sqlite
 from postgresql import *
 import psutil
 import socket
+from loguru import logger
 
 sqlite_db = "itsm.db"
 setup = json_to_dic("config.json")
 alarmistic_type = setup["type"]
-
-
 
 
 def first_run():

@@ -34,8 +34,8 @@ def load_file_to_list(file, my_path=os.getcwd()):
         return "FileNotFoundError"
 
 
-def json_to_dic(file):
-    my_file = load_file(file)
+def json_to_dic(file, my_path=os.getcwd()):
+    my_file = load_file(file, my_path)
     if my_file != "FileNotFoundError":
         my_dic = json.loads(my_file)
         return my_dic

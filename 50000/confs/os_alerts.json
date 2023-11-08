@@ -1,0 +1,48 @@
+[
+    {
+        "alert": "system_uptime",
+        "environment": "All",
+        "type": "system_uptime",
+        "description": "Check system uptime",
+        "group" : "os",
+        "message":
+        {
+          "OK": "System uptime is greater than last check. Up since var_value",
+          "NOK": "System has been restarted since last check. Up since var_value"
+        },
+        "severity": "WARNING",
+        "active": true
+    },
+    {
+        "alert": "cpu_avg_load",
+        "environment": "All",
+        "type": "cpu5mAvgLoad",
+        "description": "Check system CPU avg load in last 5 min",
+        "group" : "os",
+        "message":
+        {
+          "OK": "CPU average load in last 5 min is var_value.",
+          "NOK": "CPU average load in last 5 min is var_value. Possible problem."
+        },
+        "severity": "WARNING",
+        "active": true
+    },
+    {
+        "alert": "memory_usage",
+        "environment": "All",
+        "type": "systemMemoryUsage",
+        "description": "The memory usage by system",
+        "group" : "os",
+        "message": "The system as var_threshold_value var_threshold_type free memory",
+        "thresholds":
+        {
+            "WARNING": 4,
+            "MINOR": 3,
+            "MAJOR": 2,
+            "CRITICAL": 1
+        },
+        "threshold_type": "Gb",
+        "allowed_types": ["%", "Mb", "Gb"],
+        "active": true
+    }
+]

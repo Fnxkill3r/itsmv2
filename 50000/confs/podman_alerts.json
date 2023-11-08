@@ -1,0 +1,28 @@
+[
+    {
+        "alert": "podman_status",
+        "environment": "All",
+        "type": "podmanContainer",
+        "template": true,
+        "description": "Check if container is running.",
+        "group" : "podman",
+        "message":
+        {
+            "OK": "Container is: var_value. var_value",
+            "NOK": "Container is: var_value. var_value"
+        },
+        "severity": "WARNING",
+        "active": true
+    },
+    {
+        "names": [
+            "sad_spence",
+            "cenas"
+        ],
+        "severity": "MAJOR"
+    },
+    {
+        "names": ["mystifying_rubin"],
+        "severity": "CRITICAL"
+    }
+]
