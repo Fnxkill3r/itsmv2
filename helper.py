@@ -34,17 +34,17 @@ def load_file_to_list(file, my_path=os.getcwd()):
         return "FileNotFoundError"
 
 
-def json_to_dic(file, my_path=os.getcwd()):
+def json_to_dic(full_path):
     my_file = load_file(file, my_path)
     if my_file != "FileNotFoundError":
-        my_dic = json.loads(my_file)
+        my_dic = json.loads(full_path)
         return my_dic
     else:
         return my_file
 
 
-def load_json(my_json):
-    return json.loads(my_json)
+def load_json(full_path):
+    return json.loads(full_path)
 
 
 def has_key(dic, key):

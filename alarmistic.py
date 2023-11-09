@@ -2,7 +2,7 @@ import sys
 import os
 from helper import *
 from osalert import run_os
-from psqlalert import is_primary, run_psql
+from postgresalert import is_primary, run_psql
 from podmanalert import run_pods
 from filesystemalert import run_filesystem
 from sqlite import Sqlite
@@ -29,8 +29,7 @@ class Alarmistic:
         self.errors = []
 
     def load_config(self):
-        config_file = self.conf_dir + "/config.json"
-        config = json_to_dic(config_file)
+        config = json_to_dic("/config.json", self.conf_dir)
         if config == "FileNotFoundError":
             self.errors.append("FileNotFoundError")
             return False
@@ -41,9 +40,18 @@ class Alarmistic:
         self.config = self.load_config()
         if self.config:
             self.type = self.config["type"]
-            self.sqlite_db = self.config["sqlite"]
+            self.sqlite_db = self.config["sqlite_db"]
             self.active_modules = [key for key in self.config["active"] if self.config["active"][key]]
             self.is_blackout = self.config["blackout"]
+
+            for module in self.active_modules:
+                module_name = str(module) + "alert"
+                module_conf = str(module) + "_alerts.json"
+                if module_name not in sys.modules:
+                    self.errors.append('You have not imported the {} module'.format(module_name))
+                if not file_exists(module_conf, self.conf_dir):
+                    self.errors.append('You have not created the {} module'.format(module_conf))
+
 
             if not file_exists(self.sqlite_db, self.db_dir):
                 self.first_run()
@@ -59,18 +67,37 @@ class Alarmistic:
             os.makedirs(self.logs_dir)
             # add_to_log
 
-        hostname = socket.gethostname()
+        sqlite_db_full_path = self.db_dir + "/" + self.sqlite_db
         boot_time = int(psutil.boot_time())
-        host_db = Sqlite(sqlite_db)
-        host_db.run_query("CREATE TABLE host ( 'name'	TEXT,  'uptime' INTEGER);")
-        query_host = "INSERT INTO host (name, uptime) VALUES ('{}','{}')".format(hostname, boot_time)
-        host_db.write(query_host)
+        sqlite_conn = Sqlite(sqlite_db_full_path)
+        sqlite_conn.run_query("CREATE TABLE host ( 'name'	TEXT,  'uptime' INTEGER);")
+        query_host = "INSERT INTO host (name, uptime) VALUES ('{}','{}')".format(self.hostname, boot_time)
+        sqlite_conn.write(query_host)
 
+
+    def get_alerts(self):
+        all_alerts = []
+
+
+        for a in run_os(file_exists("os_alerts.json",self.conf_dir), self.sqlite_db):
+            all_alerts.append(a)
+        if file_exists("filesystemalert.py") and file_exists("filesystem_alerts.json", self.conf_dir):
+            for a in run_filesystem():
+                all_alerts.append(a)
+        if file_exists("podmanalert.py") and file_exists("podman_alerts.json", self.conf_dir):
+            for a in run_pods():
+                all_alerts.append(a)
+
+        if file_exists("postgresalert.py") and file_exists("postgres_alerts.json", self.conf_dir) and is_primary(port):
+            for a in run_psql(port, self.type, self.sqlite_db):
+                all_alerts.append(a)
 
     def run(self):
         self.setup()
         print(self.errors)
-        print(self.active_modules)
+        if not len(self.errors):
+            print(self.active_modules)
+            self.get_alerts()
 
 
 

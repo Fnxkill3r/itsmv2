@@ -1,12 +1,12 @@
 from alert import *
-from sqlite import Sqlite
-from datetime import datetime
+from sqlite import imeSqlite
+from datetime import datet
 from helper import *
 import psutil
 
 
-def run_os(sqlite_db):
-    os_config_dic_array = json_to_dic("os_alerts.json")
+def run_os(json_path, sqlite_db):
+    os_config_dic_array = json_to_dic(json_path)
     current_os_alerts = []
     for cnf in os_config_dic_array:
         if cnf["active"]:

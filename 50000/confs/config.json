@@ -1,6 +1,6 @@
 {
     "type": "single",
-    "sqlite": "itsm.db",
+    "sqlite_db": "itsm.db",
     "log" : "itsm.log",
     "active": {
         "os": true,

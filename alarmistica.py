@@ -1,7 +1,7 @@
 import sys
 from helper import *
 from osalert import run_os
-from psqlalert import is_primary, run_psql
+from postgresalert import is_primary, run_psql
 from podmanalert import run_pods
 from filesystemalert import run_filesystem
 from sqlite import Sqlite
@@ -39,7 +39,7 @@ def run(port):
         for a in run_pods():
             all_alerts.append(a)
 
-    if file_exists("psqlalert.py") and file_exists("psql_alerts.json") and is_primary(port):
+    if file_exists("postgresalert.py") and file_exists("postgres_alerts.json") and is_primary(port):
         for a in run_psql(port, alarmistic_type, sqlite_db):
             all_alerts.append(a)
 

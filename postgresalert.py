@@ -26,7 +26,7 @@ def is_primary(port):
 
 
 def run_psql(port, alarmistic_type, sqlite_db):
-    psql_config_dic_array = json_to_dic("psql_alerts.json")
+    psql_config_dic_array = json_to_dic("postgres_alerts.json")
     current_psql_alerts = []
     psql_databases = get_databases(port)
 
