@@ -3,8 +3,8 @@ from helper import *
 import psutil
 
 
-def run_filesystem():
-    filesystem_config_dic_array = set_filesystem_config(json_to_dic("filesystem_alerts.json"))
+def run_filesystem(json_path):
+    filesystem_config_dic_array = set_filesystem_config(load_json(read_file(json_path)))
     current_filesystem_alerts = []
     for cnf in filesystem_config_dic_array:
         current_filesystem_alerts.append(FilesystemAlert(cnf))

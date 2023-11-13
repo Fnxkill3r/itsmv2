@@ -25,8 +25,9 @@ def is_primary(port):
     return True if not conn.run_query("select pg_is_in_recovery()")[0][0] else False
 
 
-def run_psql(port, alarmistic_type, sqlite_db):
-    psql_config_dic_array = json_to_dic("postgres_alerts.json")
+def run_psql(port, json_path, alarmistic_type, sqlite_db_path):
+    psql_config_dic_array = load_json(read_file(json_path))
+    #os_config_dic_array = load_json(read_file(json_path))
     current_psql_alerts = []
     psql_databases = get_databases(port)
 
@@ -38,14 +39,14 @@ def run_psql(port, alarmistic_type, sqlite_db):
 
         if cnf["active"]:
             if cnf["group"] != "per_database" and cnf["group"] != "per_table":
-                current_psql_alerts.append(PsqlAlert(cnf, sqlite_db, port))
+                current_psql_alerts.append(PsqlAlert(cnf, sqlite_db_path, port))
             else:
                 conf = cnf["type"]
                 query = cnf["query"]
                 for db in psql_databases:
                     cnf.update({"type": conf + ":" + db})
                     cnf.update({"query": query.replace("var_database_name", db, 1)})
-                    current_psql_alerts.append(PsqlAlert(cnf, sqlite_db, port))
+                    current_psql_alerts.append(PsqlAlert(cnf, sqlite_db_path, port))
     return current_psql_alerts
 
 
@@ -184,7 +185,7 @@ class PsqlAlert(Alert):
             elif self.config["alert"] == "replica_process_running":
                 self.replica_process_running()
             elif has_key(self.config, "file"):
-                self.state = "OK" if file_exists(get_data_dir(self.port), self.config["file"]) == self.config[
+                self.state = "OK" if file_exists(get_data_dir(self.port) + self.config["file"]) == self.config[
                     "file_existence"] else "NOK"
                 self.severity = self.get_severity(self.state)
                 self.message = self.config["message"][self.state]

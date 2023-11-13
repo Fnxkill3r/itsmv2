@@ -4,8 +4,8 @@ from alert import *
 from helper import *
 
 
-def run_pods():
-    podman_config_dic_array = set_pods_config(json_to_dic("podman_alerts.json"))
+def run_pods(json_path):
+    podman_config_dic_array = set_pods_config(load_json(read_file(json_path)))
     current_pod_alerts = []
     for cnf in podman_config_dic_array:
         current_pod_alerts.append(PodmanAlert(cnf))
@@ -44,8 +44,7 @@ class PodmanAlert(Alert):
 
     def set_message(self, values):
         message = self.get_message()
-        return find_and_replace_multi(message, ["var_value", "var_value"],
-                                      values)
+        return find_and_replace_multi(message, ["var_value", "var_value"], values)
 
     def run(self):
         self.name = self.config["alert"]

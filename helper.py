@@ -9,43 +9,48 @@ def dir_exists(path):
     return os.path.isdir(path)
 
 
-def file_exists(file, my_path=os.getcwd()):
-    file_path = my_path + file if my_path[-1] == "/" else my_path + "/" + file
-    return os.path.isfile(file_path)
+def file_exists(full_path):
+    return os.path.isfile(full_path)
 
-
-def load_file(file, my_path=os.getcwd()):
-    if file_exists(file, my_path):
-        file_path = my_path + file if my_path[-1] == "/" else my_path + "/" + file
-        with open(file_path, "r") as f:
+def read_file(full_path):
+    if file_exists(full_path):
+        with open(full_path, "r") as f:
             f_content = f.read()
             return f_content
     else:
-        return "FileNotFoundError"
+        return False
 
-
-def load_file_to_list(file, my_path=os.getcwd()):
-    if file_exists(file, my_path):
-        file_path = my_path + file if my_path[-1] == "/" else my_path + "/" + file
-        with open(file_path) as fp:
-            lines = fp.readlines()
-        return lines
+def load_file(full_path):
+    if file_exists(full_path):
+        with open(full_path, "r") as f:
+            f_content = f.read()
+            return f_content
     else:
-        return "FileNotFoundError"
+        return False
+
+
+def load_file_to_list(full_path):
+    if file_exists(full_path):
+        with open(full_path) as fp:
+            lines = fp.readlines()
+            return lines
+    else:
+        return False
+
 
 
 def json_to_dic(full_path):
-    my_file = load_file(file, my_path)
-    if my_file != "FileNotFoundError":
-        my_dic = json.loads(full_path)
-        return my_dic
+    if file_exists(full_path):
+        return json.loads(full_path)
     else:
-        return my_file
+        return False
 
 
-def load_json(full_path):
-    return json.loads(full_path)
-
+def load_json(text):
+    if text:
+        return json.loads(text)
+    else:
+        return False
 
 def has_key(dic, key):
     if key in dic.keys():

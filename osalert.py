@@ -1,27 +1,27 @@
 from alert import *
-from sqlite import imeSqlite
-from datetime import datet
+from sqlite import Sqlite
+from datetime import datetime
 from helper import *
 import psutil
 
 
-def run_os(json_path, sqlite_db):
-    os_config_dic_array = json_to_dic(json_path)
+def run_os(json_path, sqlite_db_path):
+    os_config_dic_array = load_json(read_file(json_path))
     current_os_alerts = []
     for cnf in os_config_dic_array:
         if cnf["active"]:
-            current_os_alerts.append(OsAlert(cnf, sqlite_db))
+            current_os_alerts.append(OsAlert(cnf, sqlite_db_path))
     return current_os_alerts
 
 
 class OsAlert(Alert):
-    def __init__(self, config, db_name):
+    def __init__(self, config, sqlite_db_path):
         super().__init__(config)
-        self.db_name = db_name
+        self.sqlite_db_path = sqlite_db_path
         self.run()
 
     def system_uptime(self):
-        host_db = Sqlite(self.db_name)
+        host_db = Sqlite(self.sqlite_db_path)
 
         query = "SELECT uptime FROM host"
         saved_uptime = host_db.run_query(query)[0][0]
