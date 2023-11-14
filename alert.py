@@ -67,7 +67,16 @@ class Alert:
     def get_query(self):
         return self.config["query"] if has_key(self.config, "query") else "not_set"
 
-    def return_csv(self):
+    def return_as_dic(self):
+        dic = { "STATE": self.state,
+                "SEVERITY": self.severity,
+                "TYPE": self.type,
+                "MESSAGE": self.message,
+                "TIME": self.run_timestamp
+                }
+        return dic
+
+    def return_as_csv(self):
         full_string = " STATE:" + self.state + "; SEVERITY:" + self.severity + "; TYPE:" + self.type + \
                       "; MESSAGE:" + self.message + "; TIME:" + str(epoch_to_human(self.run_timestamp))
         return full_string

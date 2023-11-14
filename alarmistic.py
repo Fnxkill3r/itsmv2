@@ -19,6 +19,8 @@ class Alarmistic:
     def __init__(self, port):
         self.port = port
         self.hostname = socket.gethostname()
+        self.site = False
+        self.env = False
         self.conf_dir = str(os.getcwd()) + "/" + str(port) + "/confs/"
         self.db_dir = str(os.getcwd()) + "/" + str(port) + "/db/"
         self.logs_dir = str(os.getcwd()) + "/" + str(port) + "/logs/"
@@ -47,6 +49,9 @@ class Alarmistic:
             self.sqlite_db = self.config["sqlite_db"]
             self.active_modules = [key for key in self.config["active"] if self.config["active"][key]]
             self.is_blackout = self.config["blackout"]
+            self.site = get_site(self.hostname)
+            self.env = get_environment(self.hostname)
+
 
             for module in self.active_modules:
                 module_name = str(module) + "alert"
@@ -80,19 +85,38 @@ class Alarmistic:
 
     def get_alerts(self):
         all_alerts = []
-
-        for a in run_os(self.conf_dir + "os_alerts.json", self.db_dir + self.sqlite_db):
-            all_alerts.append(a)
-        for a in run_filesystem(self.conf_dir + "filesystem_alerts.json"):
-            all_alerts.append(a)
-        for a in run_pods(self.conf_dir + "podman_alerts.json"):
-            all_alerts.append(a)
-
-        if  is_primary(port):
-            #Postgres alerts run only on primary servers
-            for a in run_psql(port, self.conf_dir + "postgres_alerts.json", self.type, self.db_dir + self.sqlite_db):
+        if "os" in self.active_modules:
+            for a in run_os(self.conf_dir + "os_alerts.json", self.db_dir + self.sqlite_db):
                 all_alerts.append(a)
+
+        if "filesystem" in self.active_modules:
+            for a in run_filesystem(self.conf_dir + "filesystem_alerts.json"):
+                all_alerts.append(a)
+
+        if "podman" in self.active_modules:
+            for a in run_pods(self.conf_dir + "podman_alerts.json"):
+                all_alerts.append(a)
+
+        if "postgres" in self.active_modules:
+            if  is_primary(port):
+            #Postgres alerts run only on primary servers
+                for a in run_psql(port, self.conf_dir + "postgres_alerts.json", self.type, self.db_dir + self.sqlite_db):
+                    all_alerts.append(a)
+
         return all_alerts
+
+    def alert_to_csv(self, alert):
+        object_info = alert.database if hasattr(alert, 'database') and alert.database else self.port
+        csv_alert = ["severity", "state", "site", "environment", "hostname", "port", "object_info", "alert_type", "alert_description", "run_timestamp" ]
+        #print(alert.severity, alert.state, self.site.upper(), self.env.upper(), self.hostname, self.port, alert.type, alert.message, epoch_to_human(alert.run_timestamp) )
+        csv_alert = "severity:" + alert.severity + ";state:" + alert.state + ";site:" + self.site.upper() + ";environment:" + self.env.upper() +  ";hostname:" + self.hostname + ";port:" + str(self.port) + ";object_info:" + str(object_info) + ";alert_type:" + str(alert.type) + ";alert_description:" + alert.message + ";run_timestamp:" + str(epoch_to_human(alert.run_timestamp))
+        #print(csv_alert)
+        return csv_alert
+
+    def alert_to_sqlite(self, alert_dic):
+        pass
+
+
 
     def run(self):
         self.setup()
@@ -100,8 +124,16 @@ class Alarmistic:
         if not len(self.errors):
             print(self.active_modules)
             self.all_alerts = self.get_alerts()
-            for alert in self.all_alerts:
-                print(alert)
+
+            if "csv" in self.config["output_formats"]:
+                csv_alerts = []
+                for alert in self.all_alerts:
+                    csv_alerts.append(self.alert_to_csv(alert))
+                    print(self.alert_to_csv(alert))
+                with open('itsm.csv', 'w') as f:
+                    f.write('\n'.join(csv_alerts))
+
+
 
 
 

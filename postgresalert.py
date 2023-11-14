@@ -51,13 +51,14 @@ def run_psql(port, json_path, alarmistic_type, sqlite_db_path):
 
 
 class PsqlAlert(Alert):
-    def __init__(self, config, db_name, port):
+    def __init__(self, config, sqlite_db_path, port):
         super().__init__(config)
         self.port = port
-        self.db_name = db_name
+        self.sqlite_db_path = sqlite_db_path
         self.conn = Psql(port)
         self.datadir = ""
         self.databases = get_databases(port)
+        self.database = False
         self.run()
 
         # self.run()
@@ -99,7 +100,7 @@ class PsqlAlert(Alert):
         time = epoch_to_human(psql_boot_time_epoch)
 
         # print(psql_boot_time_epoch)
-        host_db = Sqlite(self.db_name)
+        host_db = Sqlite(self.sqlite_db_path)
         tables_query = "SELECT name FROM sqlite_master WHERE type ='table' AND name NOT LIKE 'sqlite_%';"
         tables = host_db.run_query(tables_query)
         total = 0
@@ -124,7 +125,7 @@ class PsqlAlert(Alert):
             # host_db.write("psql", "psql_uptime", psql_boot_time_epoch)
 
     def check_primary_server_name(self):
-        host_db = Sqlite(self.db_name)
+        host_db = Sqlite(self.sqlite_db_path)
         query = "SELECT name FROM host ORDER BY uptime LIMIT 1"
         name = host_db.run_query(query)[0][0]
         self.state = "OK" if name == socket.gethostname() else "NOK"
@@ -174,6 +175,7 @@ class PsqlAlert(Alert):
                 self.state = self.get_expected(value)
                 self.severity = self.get_severity(self.state)
                 self.message = self.set_message([self.config["type"].split(":")[1], value])
+                self.database = self.config["type"].split(":")[1]
             elif self.config["alert"] == "postgres_uptime":
                 self.postgres_uptime()
             elif self.config["alert"] == "check_primary_server_name":
@@ -191,6 +193,7 @@ class PsqlAlert(Alert):
                 self.message = self.config["message"][self.state]
             self.run_timestamp = self.get_run_timestamp()
         else:
+            #Threshold metrics
             if self.config["group"] == "per_database":
                 value = self.run_per_database_query()
                 self.severity = self.get_severity(value)
@@ -198,6 +201,7 @@ class PsqlAlert(Alert):
                 self.message = self.set_message(
                     [self.config["type"].split(":")[1], value, self.config["threshold_type"]])
                 self.run_timestamp = self.get_run_timestamp()
+                self.database = self.config["type"].split(":")[1]
 
             # TO DO
             # if self.config["group"] == "ssl":

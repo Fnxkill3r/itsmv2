@@ -109,14 +109,14 @@ def get_hostname():
     return socket.gethostname().split(".")[0]
 
 
-def get_site():
-    site = get_hostname()[0:2]
+def get_site(hostname):
+    site = hostname[0:2]
     if site.lower() != "vs" and site.lower() != "lx":
         site = "na"
     return site
 
 
-def get_environment():
+def get_environment(hostname):
     env_dic = {
         "d": "DES",
         "q": "QLY",
@@ -126,5 +126,5 @@ def get_environment():
         "p": "PRD"
 
     }
-    env = get_hostname().strip('1234567890')[-1]
+    env = hostname.strip('1234567890')[-1]
     return env_dic[env] if has_key(env_dic, env) else "na"
