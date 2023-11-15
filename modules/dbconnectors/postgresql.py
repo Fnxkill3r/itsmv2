@@ -1,17 +1,5 @@
 import psycopg2
-from helper import file_exists, load_file_to_list
-
-
-def load_conn_values(port):
-    pgpass_list = load_file_to_list("/home/postgres/.pgpass")
-    pgpass = False
-    for line in pgpass_list:
-        if port in line and line.split(":")[0] == "localhost":
-            pgpass = line.strip()
-    return pgpass
-
-
-
+from modules.helpers.helper import load_file_to_list, load_conn_values
 
 
 class Psql:

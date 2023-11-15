@@ -12,6 +12,7 @@ def dir_exists(path):
 def file_exists(full_path):
     return os.path.isfile(full_path)
 
+
 def read_file(full_path):
     if file_exists(full_path):
         with open(full_path, "r") as f:
@@ -19,6 +20,7 @@ def read_file(full_path):
             return f_content
     else:
         return False
+
 
 def load_file(full_path):
     if file_exists(full_path):
@@ -36,7 +38,6 @@ def load_file_to_list(full_path):
             return lines
     else:
         return False
-
 
 
 def json_to_dic(full_path):
@@ -128,3 +129,12 @@ def get_environment(hostname):
     }
     env = hostname.strip('1234567890')[-1]
     return env_dic[env] if has_key(env_dic, env) else "na"
+
+
+def load_conn_values(port):
+    pgpass_list = load_file_to_list("/home/postgres/.pgpass")
+    pgpass = False
+    for line in pgpass_list:
+        if port in line and line.split(":")[0] == "localhost":
+            pgpass = line.strip()
+    return pgpass

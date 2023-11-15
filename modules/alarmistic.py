@@ -1,18 +1,19 @@
-import sys
-import os
-from helper import *
-from osalert import run_os
-from postgresalert import is_primary, run_psql
-from podmanalert import run_pods
-from filesystemalert import run_filesystem
-from sqlite import Sqlite
-from postgresql import *
 import psutil
-import socket
+
+from modules.helpers.helper import *
+from modules.osalert import run_os
+from modules.filesystemalert import run_filesystem
+from modules.podmanalert import run_pods
+from modules.postgresalert import is_primary, run_psql
+
+from modules.dbconnectors.sqlite import Sqlite
+
+
+
 from loguru import logger
 
 
-#logger.add("itsm.log", format="{time:YYYY-MM-DD at HH:mm:ss} | {level} | {message}", rotation="12:00")
+# logger.add("itsm.log", format="{time:YYYY-MM-DD at HH:mm:ss} | {level} | {message}", rotation="12:00")
 
 
 class Alarmistic:
@@ -41,7 +42,6 @@ class Alarmistic:
             self.errors.append("FileNotFoundError")
             return False
 
-
     def setup(self):
         self.config = self.load_config()
         if self.config:
@@ -52,17 +52,15 @@ class Alarmistic:
             self.site = get_site(self.hostname)
             self.env = get_environment(self.hostname)
 
-
             for module in self.active_modules:
                 module_name = str(module) + "alert"
                 module_conf = str(module) + "_alerts.json"
-                if module_name not in sys.modules:
-                    self.errors.append('You have not imported the {} module'.format(module_name))
+                #if module_name not in sys.modules:
+                #    self.errors.append('You have not imported the {} module'.format(module_name))
                 if not file_exists(self.conf_dir + module_conf):
                     self.errors.append('You have not created the {} configutsion file.'.format(module_conf))
 
-
-            if not file_exists( self.db_dir + self.sqlite_db):
+            if not file_exists(self.db_dir + self.sqlite_db):
                 self.first_run()
         else:
             return False
@@ -70,7 +68,7 @@ class Alarmistic:
     def first_run(self):
         if not os.path.exists(self.db_dir):
             os.makedirs(self.db_dir)
-            #add_to_log
+            # add_to_log
         if not os.path.exists(self.logs_dir):
             os.makedirs(self.logs_dir)
             # add_to_log
@@ -81,7 +79,6 @@ class Alarmistic:
         sqlite_conn.run_query("CREATE TABLE host ( 'name'	TEXT,  'uptime' INTEGER);")
         query_host = "INSERT INTO host (name, uptime) VALUES ('{}','{}')".format(self.hostname, boot_time)
         sqlite_conn.write(query_host)
-
 
     def get_alerts(self):
         all_alerts = []
@@ -98,25 +95,28 @@ class Alarmistic:
                 all_alerts.append(a)
 
         if "postgres" in self.active_modules:
-            if  is_primary(port):
-            #Postgres alerts run only on primary servers
-                for a in run_psql(port, self.conf_dir + "postgres_alerts.json", self.type, self.db_dir + self.sqlite_db):
+            if is_primary(self.port):
+                # Postgres alerts run only on primary servers
+                for a in run_psql(self.port, self.conf_dir + "postgres_alerts.json", self.type,
+                                  self.db_dir + self.sqlite_db):
                     all_alerts.append(a)
 
         return all_alerts
 
     def alert_to_csv(self, alert):
         object_info = alert.database if hasattr(alert, 'database') and alert.database else self.port
-        csv_alert = ["severity", "state", "site", "environment", "hostname", "port", "object_info", "alert_type", "alert_description", "run_timestamp" ]
-        #print(alert.severity, alert.state, self.site.upper(), self.env.upper(), self.hostname, self.port, alert.type, alert.message, epoch_to_human(alert.run_timestamp) )
-        csv_alert = "severity:" + alert.severity + ";state:" + alert.state + ";site:" + self.site.upper() + ";environment:" + self.env.upper() +  ";hostname:" + self.hostname + ";port:" + str(self.port) + ";object_info:" + str(object_info) + ";alert_type:" + str(alert.type) + ";alert_description:" + alert.message + ";run_timestamp:" + str(epoch_to_human(alert.run_timestamp))
-        #print(csv_alert)
+        csv_alert = ["severity", "state", "site", "environment", "hostname", "port", "object_info", "alert_type",
+                     "alert_description", "run_timestamp"]
+        # print(alert.severity, alert.state, self.site.upper(), self.env.upper(), self.hostname, self.port, alert.type, alert.message, epoch_to_human(alert.run_timestamp) )
+        csv_alert = "severity:" + alert.severity + ";state:" + alert.state + ";site:" + self.site.upper() + ";environment:" + self.env.upper() + ";hostname:" + self.hostname + ";port:" + str(
+            self.port) + ";object_info:" + str(object_info) + ";alert_type:" + str(
+            alert.type) + ";alert_description:" + alert.message + ";run_timestamp:" + str(
+            epoch_to_human(alert.run_timestamp))
+        # print(csv_alert)
         return csv_alert
 
     def alert_to_sqlite(self, alert_dic):
         pass
-
-
 
     def run(self):
         self.setup()
@@ -130,26 +130,6 @@ class Alarmistic:
                 for alert in self.all_alerts:
                     csv_alerts.append(self.alert_to_csv(alert))
                     print(self.alert_to_csv(alert))
-                with open('itsm.csv', 'w') as f:
+                with open(self.port + '/itsm.csv', 'w') as f:
                     f.write('\n'.join(csv_alerts))
 
-
-
-
-
-
-if __name__ == '__main__':
-    args = len(sys.argv) - 1
-    if args == 0:
-        print("No port set")
-    else:
-        if sys.argv[1].isdigit():
-            port = sys.argv[1]
-            check_pgpass = load_conn_values(port)
-            if not check_pgpass:
-                print("No pgpass line for localhost and setted port")
-            else:
-                run = Alarmistic(port)
-                run.run()
-        else:
-            print("First arg must be Port number")

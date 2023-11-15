@@ -1,7 +1,7 @@
 import subprocess
 import json
-from alert import *
-from helper import *
+from modules.alert import *
+from modules.helpers.helper import *
 
 
 def run_pods(json_path):
@@ -10,6 +10,7 @@ def run_pods(json_path):
     for cnf in podman_config_dic_array:
         current_pod_alerts.append(PodmanAlert(cnf))
     return current_pod_alerts
+
 
 def set_pods_config(dic_array):
     result = subprocess.getoutput('podman ps -a --format json')

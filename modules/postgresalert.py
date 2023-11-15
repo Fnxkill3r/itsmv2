@@ -1,6 +1,6 @@
-from alert import *
-from postgresql import *
-from sqlite import Sqlite
+from modules.alert import *
+from modules.dbconnectors.postgresql import *
+from modules.dbconnectors.sqlite import Sqlite
 import socket
 import psutil
 import subprocess

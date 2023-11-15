@@ -33,6 +33,8 @@ v replicaStatus                           Check if the replica status is streami
 v replicaLsnDelay                         Check the delay on replica
 V replicaProcessRunning                   Check if the walsender or walreciver is running
 
+
+
 X pcsResourceUnmanaged                    Check if exists at last one resource unmanaged in Peacemaker Cluster
 X backupDatabase                          Check if exists at last one full backup in current timestamp -2 days
 X archiveFailedNetbackup                  Check if the last archive by postgres was archived successfully in NetBackup

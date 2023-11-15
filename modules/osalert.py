@@ -1,7 +1,7 @@
-from alert import *
-from sqlite import Sqlite
+from modules.alert import *
+from modules.dbconnectors.sqlite import Sqlite
 from datetime import datetime
-from helper import *
+from modules.helpers.helper import *
 import psutil
 
 

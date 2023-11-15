@@ -1,5 +1,5 @@
-from alert import *
-from helper import *
+from modules.alert import *
+from modules.helpers.helper import *
 import psutil
 
 
